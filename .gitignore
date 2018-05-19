@@ -1,0 +1,5 @@
+/.vs
+/MPatchCLI/*.user
+/bin
+/MPatchCLI/obj
+/MPatchLib/obj
