@@ -36,8 +36,8 @@ typedef struct {
 } MD5_CTX;
 
 void MD5_Init(MD5_CTX *const ctx);
-void MD5_Update(MD5_CTX *const ctx, const void *data, uint64_t size);
+void MD5_Update(MD5_CTX *const ctx, const void *data, uint_fast32_t size);
 void MD5_Final(uint8_t *const result, MD5_CTX *const ctx);
-void MD5_Digest(const void *const data, const uint64_t size, uint8_t *const result);
+void MD5_Digest(const void *const data, const uint_fast32_t size, uint8_t *const result);
 
 #endif

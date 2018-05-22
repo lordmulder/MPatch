@@ -81,7 +81,7 @@
  * This processes one or more 64-byte data blocks, but does NOT update the bit
  * counters.  There are no alignment requirements.
  */
-static const void *body(MD5_CTX *const ctx, const void *const data, uint64_t size)
+static const void *body(MD5_CTX *const ctx, const void *const data, uint_fast32_t size)
 {
 	const uint8_t *ptr;
 	uint32_t a, b, c, d;
@@ -199,15 +199,15 @@ void MD5_Init(MD5_CTX *const ctx)
 	ctx->hi = 0;
 }
 
-void MD5_Update(MD5_CTX *const ctx, const void *data, uint64_t size)
+void MD5_Update(MD5_CTX *const ctx, const void *data, uint_fast32_t size)
 {
-	uint32_t saved_lo;
-	uint64_t used, available;
+	uint_fast32_t saved_lo;
+	uint_fast32_t used, available;
 
 	saved_lo = ctx->lo;
 	if ((ctx->lo = (saved_lo + size) & 0x1fffffff) < saved_lo)
 		ctx->hi++;
-	ctx->hi += (uint32_t)(size >> 29);
+	ctx->hi += (uint_fast32_t)(size >> 29);
 
 	used = saved_lo & 0x3f;
 
@@ -226,7 +226,7 @@ void MD5_Update(MD5_CTX *const ctx, const void *data, uint64_t size)
 	}
 
 	if (size >= 64) {
-		data = body(ctx, data, size & ~(uint64_t)0x3f);
+		data = body(ctx, data, size & ~(uint_fast32_t)0x3f);
 		size &= 0x3f;
 	}
 
@@ -241,7 +241,7 @@ void MD5_Update(MD5_CTX *const ctx, const void *data, uint64_t size)
 
 void MD5_Final(uint8_t *const result, MD5_CTX *const ctx)
 {
-	uint64_t used, available;
+	uint_fast32_t used, available;
 
 	used = ctx->lo & 0x3f;
 
@@ -272,7 +272,7 @@ void MD5_Final(uint8_t *const result, MD5_CTX *const ctx)
 	memset(ctx, 0, sizeof(*ctx));
 }
 
-void MD5_Digest(const void *const data, const uint64_t size, uint8_t *const result)
+void MD5_Digest(const void *const data, const uint_fast32_t size, uint8_t *const result)
 {
 	MD5_CTX ctx;
 	MD5_Init(&ctx);
