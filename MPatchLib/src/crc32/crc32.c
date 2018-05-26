@@ -61,13 +61,13 @@ static const uint32_t rhash_crc32_table[256] = {
  * @param size the length of the message
  * @return updated CRC32 hash sum
  */
-static uint32_t rhash_get_crc32(const uint32_t crcinit, const uint8_t *msg, size_t size)
+static uint32_t rhash_get_crc32(const uint32_t crcinit, const uint8_t *msg, uint_fast32_t size)
 {
 	register uint32_t crc = crcinit ^ 0xFFFFFFFF;
 	const uint8_t *e;
 
 	/* process not aligned message head */
-	for (; (3 & (msg - (unsigned char*)0)) && size > 0; msg++, size--)
+	for (; (3 & (msg - (uint8_t*)0)) && size > 0; msg++, size--)
 		crc = rhash_crc32_table[(crc ^ *msg) & 0xFF] ^ (crc >> 8);
 
 	/* fast CRC32 calculation of a DWORD-aligned message */
@@ -123,7 +123,7 @@ void mpatch_crc32_init(uint32_t *const crc32)
  * @param msg message chunk
  * @param size length of the message chunk
  */
-void mpatch_crc32_update(uint32_t *const crc32, const uint8_t *const msg, const size_t size)
+void mpatch_crc32_update(uint32_t *const crc32, const uint8_t *const msg, const uint_fast32_t size)
 {
 	*crc32 = rhash_get_crc32(*crc32, msg, size);
 }
@@ -153,7 +153,7 @@ void mpatch_crc32_final(const uint32_t *const crc32, uint8_t *const result)
 * @param size the length of the message
 * @return updated CRC32 hash sum
 */
-void mpatch_crc32_compute(const uint8_t *const msg, const size_t size, uint8_t *const result)
+void mpatch_crc32_compute(const uint8_t *const msg, const uint_fast32_t size, uint8_t *const result)
 {
 	uint32_t ctx;
 	mpatch_crc32_init(&ctx);
