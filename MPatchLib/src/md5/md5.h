@@ -40,4 +40,4 @@ void MD5_Update(MD5_CTX *const ctx, const void *data, uint_fast32_t size);
 void MD5_Final(uint8_t *const result, MD5_CTX *const ctx);
 void MD5_Digest(const void *const data, const uint_fast32_t size, uint8_t *const result);
 
-#endif
+#endif //_INC_MD5_H
