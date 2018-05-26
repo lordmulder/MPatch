@@ -110,7 +110,7 @@ static uint32_t rhash_get_crc32(const uint32_t crcinit, const uint8_t *msg, size
  *
  * @param crc32 pointer to the hash to initialize
  */
-void crc32_init(uint32_t *const crc32)
+void mpatch_crc32_init(uint32_t *const crc32)
 {
 	*crc32 = 0U; /* note: context size is sizeof(uint32_t) */
 }
@@ -123,7 +123,7 @@ void crc32_init(uint32_t *const crc32)
  * @param msg message chunk
  * @param size length of the message chunk
  */
-void crc32_update(uint32_t *const crc32, const uint8_t *const msg, const size_t size)
+void mpatch_crc32_update(uint32_t *const crc32, const uint8_t *const msg, const size_t size)
 {
 	*crc32 = rhash_get_crc32(*crc32, msg, size);
 }
@@ -134,7 +134,7 @@ void crc32_update(uint32_t *const crc32, const uint8_t *const msg, const size_t 
  * @param crc32 pointer to the current hash value
  * @param result calculated hash in binary form
  */
-void crc32_final(const uint32_t *const crc32, uint8_t *const result)
+void mpatch_crc32_final(const uint32_t *const crc32, uint8_t *const result)
 {
 #if defined(CPU_IA32) || defined(CPU_X64)
 	/* intel CPUs support assigment with non 32-bit aligned pointers */
@@ -153,10 +153,10 @@ void crc32_final(const uint32_t *const crc32, uint8_t *const result)
 * @param size the length of the message
 * @return updated CRC32 hash sum
 */
-void crc32_compute(const uint8_t *const msg, const size_t size, uint8_t *const result)
+void mpatch_crc32_compute(const uint8_t *const msg, const size_t size, uint8_t *const result)
 {
 	uint32_t ctx;
-	crc32_init(&ctx);
-	crc32_update(&ctx, msg, size);
-	crc32_final(&ctx, result);
+	mpatch_crc32_init(&ctx);
+	mpatch_crc32_update(&ctx, msg, size);
+	mpatch_crc32_final(&ctx, result);
 }

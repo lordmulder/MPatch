@@ -188,7 +188,7 @@ static const void *body(MD5_CTX *const ctx, const void *const data, uint_fast32_
 	return ptr;
 }
 
-void MD5_Init(MD5_CTX *const ctx)
+void mpatch_md5_init(MD5_CTX *const ctx)
 {
 	ctx->a = 0x67452301;
 	ctx->b = 0xefcdab89;
@@ -199,7 +199,7 @@ void MD5_Init(MD5_CTX *const ctx)
 	ctx->hi = 0;
 }
 
-void MD5_Update(MD5_CTX *const ctx, const void *data, uint_fast32_t size)
+void mpatch_md5_update(MD5_CTX *const ctx, const void *data, uint_fast32_t size)
 {
 	uint_fast32_t saved_lo;
 	uint_fast32_t used, available;
@@ -239,7 +239,7 @@ void MD5_Update(MD5_CTX *const ctx, const void *data, uint_fast32_t size)
 	(dst)[2] = (uint8_t)((src) >> 16); \
 	(dst)[3] = (uint8_t)((src) >> 24);
 
-void MD5_Final(uint8_t *const result, MD5_CTX *const ctx)
+void mpatch_md5_final(uint8_t *const result, MD5_CTX *const ctx)
 {
 	uint_fast32_t used, available;
 
@@ -272,10 +272,10 @@ void MD5_Final(uint8_t *const result, MD5_CTX *const ctx)
 	memset(ctx, 0, sizeof(*ctx));
 }
 
-void MD5_Digest(const void *const data, const uint_fast32_t size, uint8_t *const result)
+void mpatch_md5_digest(const void *const data, const uint_fast32_t size, uint8_t *const result)
 {
 	MD5_CTX ctx;
-	MD5_Init(&ctx);
-	MD5_Update(&ctx, data, size);
-	MD5_Final(result, &ctx);
+	mpatch_md5_init(&ctx);
+	mpatch_md5_update(&ctx, data, size);
+	mpatch_md5_final(result, &ctx);
 }

@@ -19,9 +19,9 @@
 
 #include <stdint.h>
 
-void crc32_init(uint32_t *const crc32);
-void crc32_update(uint32_t *const crc32, const uint8_t *const msg, const size_t size);
-void crc32_final(const uint32_t *const crc32, uint8_t *const result);
-void crc32_compute(const uint8_t *const msg, const size_t size, uint8_t *const result);
+void mpatch_crc32_init(uint32_t *const crc32);
+void mpatch_crc32_update(uint32_t *const crc32, const uint8_t *const msg, const size_t size);
+void mpatch_crc32_final(const uint32_t *const crc32, uint8_t *const result);
+void mpatch_crc32_compute(const uint8_t *const msg, const size_t size, uint8_t *const result);
 
 #endif /* _INC_CRC32_H */

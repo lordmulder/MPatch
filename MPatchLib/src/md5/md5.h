@@ -35,9 +35,9 @@ typedef struct {
 	uint32_t block[16];
 } MD5_CTX;
 
-void MD5_Init(MD5_CTX *const ctx);
-void MD5_Update(MD5_CTX *const ctx, const void *data, uint_fast32_t size);
-void MD5_Final(uint8_t *const result, MD5_CTX *const ctx);
-void MD5_Digest(const void *const data, const uint_fast32_t size, uint8_t *const result);
+void mpatch_md5_init(MD5_CTX *const ctx);
+void mpatch_md5_update(MD5_CTX *const ctx, const void *data, uint_fast32_t size);
+void mpatch_md5_final(uint8_t *const result, MD5_CTX *const ctx);
+void mpatch_md5_digest(const void *const data, const uint_fast32_t size, uint8_t *const result);
 
 #endif //_INC_MD5_H
