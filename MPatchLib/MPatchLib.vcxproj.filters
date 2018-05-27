@@ -39,6 +39,9 @@
     <ClInclude Include="src\crc32\byte_order.h">
       <Filter>Header Files\crc32</Filter>
     </ClInclude>
+    <ClInclude Include="src\pool.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\libmpatch.c">
@@ -49,6 +52,9 @@
     </ClCompile>
     <ClCompile Include="src\crc32\crc32.c">
       <Filter>Source Files\crc32</Filter>
+    </ClCompile>
+    <ClCompile Include="src\pool.c">
+      <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>
