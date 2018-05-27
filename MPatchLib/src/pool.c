@@ -40,11 +40,10 @@ pool_task_t;
 
 typedef struct
 {
-	pool_task_t *tasks;
+	pool_task_t tasks[MAX_THREAD_COUNT];
 	pthread_mutex_t mutex;
 	sem_t sem_put;
 	sem_t sem_get;
-	uint_fast32_t size;
 	uint_fast32_t pos_put;
 	uint_fast32_t pos_get;
 }
@@ -62,7 +61,7 @@ pool_state_t;
 typedef struct
 {
 	uint_fast32_t thread_count;
-	pthread_t *threads;
+	pthread_t threads[MAX_THREAD_COUNT];
 	pool_state_t pool_state;
 }
 pthread_pool_t;
@@ -71,16 +70,9 @@ pthread_pool_t;
 /* Task queue                                                              */
 /* ======================================================================= */
 
-static bool init_queue(pool_queue_t *const queue, const uint_fast32_t size)
+static bool init_queue(pool_queue_t *const queue)
 {
 	memset(queue, 0U, sizeof(pool_queue_t));
-
-	queue->tasks = (pool_task_t*)malloc(sizeof(pool_task_t) * (queue->size = size));
-	if (!queue->tasks)
-	{
-		memset(&queue, 0U, sizeof(pool_queue_t));
-		return false;
-	}
 
 	if (pthread_mutex_init(&queue->mutex, NULL))
 	{
@@ -89,7 +81,7 @@ static bool init_queue(pool_queue_t *const queue, const uint_fast32_t size)
 		return false;
 	}
 
-	if (sem_init(&queue->sem_get, 0U, 0U) || sem_init(&queue->sem_put, 0U, size))
+	if (sem_init(&queue->sem_get, 0U, 0U) || sem_init(&queue->sem_put, 0U, MAX_THREAD_COUNT))
 	{
 		pthread_mutex_destroy(&queue->mutex);
 		free(queue->tasks);
@@ -114,11 +106,6 @@ static bool destroy_queue(pool_queue_t *const queue)
 		success = false;
 	}
 
-	if (queue->tasks)
-	{
-		free(queue->tasks);
-	}
-
 	memset(&queue, 0U, sizeof(pool_queue_t));
 	return success;
 }
@@ -136,7 +123,7 @@ static inline void put_task(pool_queue_t *const queue, const pool_task_t *const 
 	}
 	
 	memcpy(queue->tasks + queue->pos_put, task, sizeof(pool_task_t));
-	queue->pos_put = (queue->pos_put + 1U) % queue->size;
+	queue->pos_put = (queue->pos_put + 1U) % MAX_THREAD_COUNT;
 
 	if (pthread_mutex_unlock(&queue->mutex))
 	{
@@ -162,7 +149,7 @@ static inline void get_task(pool_queue_t *const queue, pool_task_t *const task)
 	}
 
 	memcpy(task, queue->tasks + queue->pos_get, sizeof(pool_task_t));
-	queue->pos_get = (queue->pos_get + 1U) % queue->size;
+	queue->pos_get = (queue->pos_get + 1U) % MAX_THREAD_COUNT;
 
 	if (pthread_mutex_unlock(&queue->mutex))
 	{
@@ -182,11 +169,20 @@ static inline void get_task(pool_queue_t *const queue, pool_task_t *const task)
 static void *thread_func(void *const args)
 {
 	pool_state_t *const state = (pool_state_t*)args;
+
 	for (;;)
 	{
 		pool_task_t task;
 		get_task(&state->task_queue, &task);
-		task.func(task.data);
+
+		if (task.func)
+		{
+			task.func(task.data);
+		}
+		else
+		{
+			break; /*terminate*/
+		}
 
 		if (pthread_mutex_lock(&state->mutex))
 		{
@@ -206,15 +202,22 @@ static void *thread_func(void *const args)
 			abort();
 		}
 	}
+
+	return NULL;
 }
 
 /* ======================================================================= */
 /* Pool functions                                                          */
 /* ======================================================================= */
 
-bool mpatch_pool_create(thread_pool_t *const pool, const uint32_t thread_count, const uint32_t queue_size)
+bool mpatch_pool_create(thread_pool_t *const pool, const uint32_t thread_count)
 {
 	memset(pool, 0U, sizeof(thread_pool_t));
+
+	if (thread_count > MAX_THREAD_COUNT)
+	{
+		return false;
+	}
 
 	pthread_pool_t *const pool_data = malloc(sizeof(pthread_pool_t));
 	if (!pool_data)
@@ -224,15 +227,8 @@ bool mpatch_pool_create(thread_pool_t *const pool, const uint32_t thread_count, 
 
 	memset(pool_data, 0U, sizeof(pthread_pool_t));
 
-	pool_data->threads = (pthread_t*)malloc(sizeof(pthread_t) * thread_count);
-	if (!pool_data->threads)
-	{
-		return false;
-	}
-
 	if (pthread_mutex_init(&pool_data->pool_state.mutex, NULL))
 	{
-		free(pool_data->threads);
 		free(pool_data);
 		return false;
 	}
@@ -240,16 +236,14 @@ bool mpatch_pool_create(thread_pool_t *const pool, const uint32_t thread_count, 
 	if (pthread_cond_init(&pool_data->pool_state.cond_ready, NULL))
 	{
 		pthread_mutex_destroy(&pool_data->pool_state.mutex);
-		free(pool_data->threads);
 		free(pool_data);
 		return false;
 	}
 
-	if (!init_queue(&pool_data->pool_state.task_queue , queue_size))
+	if (!init_queue(&pool_data->pool_state.task_queue))
 	{
 		pthread_cond_destroy(&pool_data->pool_state.cond_ready);
 		pthread_mutex_destroy(&pool_data->pool_state.mutex);
-		free(pool_data->threads);
 		free(pool_data);
 		return false;
 	}
@@ -267,7 +261,6 @@ bool mpatch_pool_create(thread_pool_t *const pool, const uint32_t thread_count, 
 		destroy_queue(&pool_data->pool_state.task_queue);
 		pthread_cond_destroy(&pool_data->pool_state.cond_ready);
 		pthread_mutex_destroy(&pool_data->pool_state.mutex);
-		free(pool_data->threads);
 		free(pool_data);
 		return false;
 	}
@@ -281,6 +274,20 @@ bool mpatch_pool_destroy(thread_pool_t *const pool)
 {
 	bool success = true;
 	pthread_pool_t *const pool_data = (pthread_pool_t*)pool->pool_data;
+
+	for (uint_fast32_t t = 0; t < pool_data->thread_count; ++t)
+	{
+		const pool_task_t  stop_task = { NULL, 0U };
+		put_task(&pool_data->pool_state.task_queue, &stop_task);
+	}
+
+	for (uint_fast32_t t = 0; t < pool_data->thread_count; ++t)
+	{
+		if (pthread_join(*(pool_data->threads + t), NULL))
+		{
+			success = false;
+		}
+	}
 
 	if (!destroy_queue(&pool_data->pool_state.task_queue))
 	{
@@ -297,7 +304,6 @@ bool mpatch_pool_destroy(thread_pool_t *const pool)
 		success = false;
 	}
 
-	free(pool_data->threads);
 	memset(pool_data, 0U, sizeof(pthread_pool_t));
 	free(pool_data);
 
@@ -307,6 +313,11 @@ bool mpatch_pool_destroy(thread_pool_t *const pool)
 
 void mpatch_pool_put(thread_pool_t *const pool, const pool_task_func_t func, const uintptr_t data)
 {
+	if (!func)
+	{
+		return; /*discard*/
+	}
+	
 	pthread_pool_t *const pool_data = (pthread_pool_t*)pool->pool_data;
 
 	if (pthread_mutex_lock(&pool_data->pool_state.mutex))
