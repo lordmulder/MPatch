@@ -24,7 +24,7 @@
 #include <stdint.h>
 #include <stdbool.h>
 
-typedef bool(*pool_task_func_t)(const uintptr_t user_data);
+typedef void (*pool_task_func_t)(const uintptr_t user_data);
 
 typedef struct
 {
@@ -33,5 +33,7 @@ typedef struct
 thread_pool_t;
 
 bool mpatch_pool_create(thread_pool_t *const pool, const uint32_t thread_count, const uint32_t queue_size);
+void mpatch_pool_put(thread_pool_t *const pool, const pool_task_func_t func, const uintptr_t data);
+void mpatch_pool_wait(thread_pool_t *const pool);
 
 #endif
