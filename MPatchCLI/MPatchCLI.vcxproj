@@ -21,6 +21,7 @@
   <ItemGroup>
     <ClCompile Include="src\mem_io.c" />
     <ClCompile Include="src\main.c" />
+    <ClCompile Include="src\sysinfo.c" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\MPatchLib\MPatchLib.vcxproj">
@@ -29,6 +30,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\mem_io.h" />
+    <ClInclude Include="src\sysinfo.h" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <VCProjectVersion>15.0</VCProjectVersion>
