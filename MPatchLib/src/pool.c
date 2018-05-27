@@ -276,6 +276,35 @@ bool mpatch_pool_create(thread_pool_t *const pool, const uint32_t thread_count, 
 	return true;
 }
 
+bool mpatch_pool_destroy(thread_pool_t *const pool)
+{
+	bool success = true;
+	pthread_pool_t *const pool_data = (pthread_pool_t*)pool->pool_data;
+
+	if (!destroy_queue(&pool_data->pool_state.task_queue))
+	{
+		success = false;
+	}
+
+	if (pthread_cond_destroy(&pool_data->pool_state.cond_ready))
+	{
+		success = false;
+	}
+
+	if (pthread_mutex_destroy(&pool_data->pool_state.mutex))
+	{
+		success = false;
+	}
+
+	memset(&pool_data, 0U, sizeof(pthread_pool_t));
+
+	free(pool_data->threads);
+	free(pool_data);
+
+	memset(&pool, 0U, sizeof(thread_pool_t));
+	return success;
+}
+
 void mpatch_pool_put(thread_pool_t *const pool, const pool_task_func_t func, const uintptr_t data)
 {
 	pthread_pool_t *const pool_data = (pthread_pool_t*)pool->pool_data;
