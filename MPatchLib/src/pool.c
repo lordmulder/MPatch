@@ -73,7 +73,7 @@ pthread_pool_t;
 
 static bool init_queue(pool_queue_t *const queue, const uint_fast32_t size)
 {
-	memset(&queue, 0U, sizeof(pool_queue_t));
+	memset(queue, 0U, sizeof(pool_queue_t));
 
 	queue->tasks = (pool_task_t*)malloc(sizeof(pool_task_t) * (queue->size = size));
 	if (!queue->tasks)
@@ -214,7 +214,7 @@ static void *thread_func(void *const args)
 
 bool mpatch_pool_create(thread_pool_t *const pool, const uint32_t thread_count, const uint32_t queue_size)
 {
-	memset(&pool, 0U, sizeof(thread_pool_t));
+	memset(pool, 0U, sizeof(thread_pool_t));
 
 	pthread_pool_t *const pool_data = malloc(sizeof(pthread_pool_t));
 	if (!pool_data)
@@ -222,7 +222,7 @@ bool mpatch_pool_create(thread_pool_t *const pool, const uint32_t thread_count, 
 		return false;
 	}
 
-	memset(&pool_data, 0U, sizeof(pthread_pool_t));
+	memset(pool_data, 0U, sizeof(pthread_pool_t));
 
 	pool_data->threads = (pthread_t*)malloc(sizeof(pthread_t) * thread_count);
 	if (!pool_data->threads)
@@ -272,6 +272,7 @@ bool mpatch_pool_create(thread_pool_t *const pool, const uint32_t thread_count, 
 		return false;
 	}
 
+	pool->thread_count = thread_count;
 	pool->pool_data = (uintptr_t)pool_data;
 	return true;
 }
@@ -296,12 +297,11 @@ bool mpatch_pool_destroy(thread_pool_t *const pool)
 		success = false;
 	}
 
-	memset(&pool_data, 0U, sizeof(pthread_pool_t));
-
 	free(pool_data->threads);
+	memset(pool_data, 0U, sizeof(pthread_pool_t));
 	free(pool_data);
 
-	memset(&pool, 0U, sizeof(thread_pool_t));
+	memset(pool, 0U, sizeof(thread_pool_t));
 	return success;
 }
 
@@ -324,7 +324,7 @@ void mpatch_pool_put(thread_pool_t *const pool, const pool_task_func_t func, con
 	}
 }
 
-void mpatch_pool_wait(thread_pool_t *const pool)
+void mpatch_pool_await(thread_pool_t *const pool)
 {
 	pthread_pool_t *const pool_data = (pthread_pool_t*)pool->pool_data;
 
