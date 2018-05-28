@@ -24,6 +24,8 @@
 #include <stdint.h>
 #include <stdbool.h>
 
+#define MAX_THREAD_COUNT 16U
+
 typedef void (*pool_task_func_t)(const uintptr_t user_data);
 
 typedef struct
@@ -33,10 +35,16 @@ typedef struct
 }
 thread_pool_t;
 
-#define MAX_THREAD_COUNT 16U
+typedef struct
+{
+	pool_task_func_t func;
+	uintptr_t data;
+}
+pool_task_t;
 
 bool mpatch_pool_create(thread_pool_t *const pool, const uint32_t thread_count);
 void mpatch_pool_put(thread_pool_t *const pool, const pool_task_func_t func, const uintptr_t data);
+void mpatch_pool_put_multiple(thread_pool_t *const pool, const pool_task_t *const task, const uint32_t count);
 void mpatch_pool_await(thread_pool_t *const pool);
 bool mpatch_pool_destroy(thread_pool_t *const pool);
 

@@ -33,13 +33,6 @@
 
 typedef struct
 {
-	pool_task_func_t func;
-	uintptr_t data;
-}
-pool_task_t;
-
-typedef struct
-{
 	pool_task_t tasks[MAX_THREAD_COUNT];
 	pthread_mutex_t mutex;
 	sem_t sem_put;
@@ -133,6 +126,69 @@ static inline void put_task(pool_queue_t *const queue, const pool_task_t *const 
 	if (sem_post(&queue->sem_get))
 	{
 		abort();
+	}
+}
+
+#include <stdio.h>
+
+static inline void put_tasks(pool_queue_t *const queue, const pool_task_t *const task, const uint32_t count)
+{
+	uint32_t done = 0U;
+
+	while (done < count)
+	{
+		if (sem_wait(&queue->sem_put))
+		{
+			abort();
+		}
+
+		if (pthread_mutex_lock(&queue->mutex))
+		{
+			abort();
+		}
+
+		uint32_t batch_size = 1U;
+
+		while (done + batch_size < count)
+		{
+			const int ret = sem_trywait(&queue->sem_put);
+			if (ret)
+			{
+				if (ret != EAGAIN)
+				{
+					abort();
+				}
+				break;
+			}
+			else
+			{
+				++batch_size;
+			}
+		}
+
+		if (queue->pos_put + batch_size > MAX_THREAD_COUNT)
+		{
+			const uint32_t copy_len = MAX_THREAD_COUNT - queue->pos_put;
+			memcpy(queue->tasks + queue->pos_put, task + done, sizeof(pool_task_t) * copy_len);
+			memcpy(queue->tasks, task + done + copy_len, sizeof(pool_task_t) * (batch_size - copy_len));
+		}
+		else
+		{
+			memcpy(queue->tasks + queue->pos_put, task + done, sizeof(pool_task_t) * batch_size);
+		}
+
+		queue->pos_put = (queue->pos_put + batch_size) % MAX_THREAD_COUNT;
+		done += batch_size;
+
+		if (pthread_mutex_unlock(&queue->mutex))
+		{
+			abort();
+		}
+
+		if (sem_post_multiple(&queue->sem_get, (int)batch_size))
+		{
+			abort();
+		}
 	}
 }
 
@@ -326,8 +382,34 @@ void mpatch_pool_put(thread_pool_t *const pool, const pool_task_func_t func, con
 	}
 
 	const pool_task_t task = { func, data };
-	put_task(&pool_data->pool_state.task_queue, &task);
 	pool_data->pool_state.pending++;
+	put_task(&pool_data->pool_state.task_queue, &task);
+
+	if (pthread_mutex_unlock(&pool_data->pool_state.mutex))
+	{
+		abort();
+	}
+}
+
+void mpatch_pool_put_multiple(thread_pool_t *const pool, const pool_task_t *const task, const uint32_t count)
+{
+	for (uint32_t i = 0U; i < count; ++i)
+	{
+		if (!task[i].func)
+		{
+			return; /*discard*/
+		}
+	}
+
+	pthread_pool_t *const pool_data = (pthread_pool_t*)pool->pool_data;
+
+	if (pthread_mutex_lock(&pool_data->pool_state.mutex))
+	{
+		abort();
+	}
+
+	pool_data->pool_state.pending += count;
+	put_tasks(&pool_data->pool_state.task_queue, task, count);
 
 	if (pthread_mutex_unlock(&pool_data->pool_state.mutex))
 	{
