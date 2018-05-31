@@ -22,25 +22,73 @@
 
 #define WIN32_LEAN_AND_MEAN 1
 #include <Windows.h>
+#include <malloc.h>
 
-uint_fast32_t get_processor_count(void)
+typedef BOOL(WINAPI *GET_LOGICAL_PROCINFO)(PSYSTEM_LOGICAL_PROCESSOR_INFORMATION, PDWORD);
+
+static uint_fast32_t get_simple_processor_count(void)
 {
+	uint_fast32_t processor_core_count = 0U;
 	DWORD_PTR maskProcess, maskSystem;
 	if (GetProcessAffinityMask(GetCurrentProcess(), &maskProcess, &maskSystem))
 	{
-		uint_fast32_t count = 0U;
-		while (maskProcess)
+		while (maskSystem)
 		{
-			if (maskProcess & 1U)
+			if (maskSystem & 1U)
 			{
-				count++;
+				processor_core_count++;
 			}
-			maskProcess >>= 1U;
-		}
-		if (count)
-		{
-			return count;
+			maskSystem >>= 1U;
 		}
 	}
-	return 1U;
+	return processor_core_count;
+}
+
+static uint_fast32_t get_physical_processor_count(void)
+{
+	const GET_LOGICAL_PROCINFO get_logical_procinfo = (GET_LOGICAL_PROCINFO) GetProcAddress(GetModuleHandleW(L"kernel32"), "GetLogicalProcessorInformation");
+	if (!get_logical_procinfo)
+	{
+		return 0U; /*unsupported*/
+	}
+
+	PSYSTEM_LOGICAL_PROCESSOR_INFORMATION buffer = NULL;
+	DWORD return_length = 0U;
+	while(!get_logical_procinfo(buffer, &return_length))
+	{
+		if (GetLastError() == ERROR_INSUFFICIENT_BUFFER)
+		{
+			if (!(buffer = (PSYSTEM_LOGICAL_PROCESSOR_INFORMATION)realloc(buffer, return_length)))
+			{
+				return 0U;
+			}
+		}
+		else
+		{
+			return 0U; /*failed*/
+		}
+	}
+
+	uint_fast32_t processor_core_count = 0U;
+	const DWORD info_count = return_length / sizeof(PSYSTEM_LOGICAL_PROCESSOR_INFORMATION);
+	for(DWORD i = 0U; i < info_count; ++i)
+	{
+		if (buffer[i].Relationship == RelationProcessorCore)
+		{
+			processor_core_count++;
+		}
+	}
+
+	free(buffer);
+	return processor_core_count;
+}
+
+uint_fast32_t get_processor_count(void)
+{
+	uint_fast32_t count = get_physical_processor_count();
+	if (!count)
+	{
+		count = get_simple_processor_count();
+	}
+	return count ? count : 1U;
 }
