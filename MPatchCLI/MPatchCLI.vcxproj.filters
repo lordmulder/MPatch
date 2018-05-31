@@ -32,5 +32,8 @@
     <ClInclude Include="src\sysinfo.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="src\errors.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>

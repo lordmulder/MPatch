@@ -30,6 +30,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\mem_io.h" />
+    <ClInclude Include="src\errors.h" />
     <ClInclude Include="src\sysinfo.h" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
