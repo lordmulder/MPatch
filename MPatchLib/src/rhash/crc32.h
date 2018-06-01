@@ -14,8 +14,8 @@
 * or FITNESS FOR A PARTICULAR PURPOSE.  Use this program  at  your own risk!
 */
 
-#if !defined(_INC_CRC32_H)
-#define _INC_CRC32_H
+#ifndef _INC_RHASH_CRC32_H
+#define _INC_RHASH_CRC32_H
 
 #include <stdint.h>
 
@@ -24,4 +24,4 @@ void mpatch_crc32_update(uint32_t *const crc32, const uint8_t *const msg, const 
 void mpatch_crc32_final(const uint32_t *const crc32, uint8_t *const result);
 void mpatch_crc32_compute(const uint8_t *const msg, const uint_fast32_t size, uint8_t *const result);
 
-#endif /* _INC_CRC32_H */
+#endif /*_INC_RHASH_CRC32_H*/

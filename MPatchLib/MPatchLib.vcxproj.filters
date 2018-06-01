@@ -13,16 +13,10 @@
       <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
       <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
     </Filter>
-    <Filter Include="Header Files\md5">
-      <UniqueIdentifier>{474f11bf-45d1-4951-9d52-fe4cc4a403f7}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Source Files\md5">
-      <UniqueIdentifier>{99fb7847-31ee-46e6-ab64-f41c1b36fe69}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Header Files\crc32">
+    <Filter Include="Header Files\rhash">
       <UniqueIdentifier>{e105d92d-10ad-4012-b16b-3039aff5218f}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Source Files\crc32">
+    <Filter Include="Source Files\rhash">
       <UniqueIdentifier>{b5063236-7e8e-4666-9150-4c5e62d43d33}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
@@ -30,31 +24,31 @@
     <ClInclude Include="include\libmpatch.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="src\md5\md5.h">
-      <Filter>Header Files\md5</Filter>
-    </ClInclude>
-    <ClInclude Include="src\crc32\crc32.h">
-      <Filter>Header Files\crc32</Filter>
-    </ClInclude>
-    <ClInclude Include="src\crc32\byte_order.h">
-      <Filter>Header Files\crc32</Filter>
-    </ClInclude>
     <ClInclude Include="src\pool.h">
       <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\rhash\crc32.h">
+      <Filter>Header Files\rhash</Filter>
+    </ClInclude>
+    <ClInclude Include="src\rhash\md5.h">
+      <Filter>Header Files\rhash</Filter>
+    </ClInclude>
+    <ClInclude Include="src\rhash\byte_order.h">
+      <Filter>Header Files\rhash</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\libmpatch.c">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="src\md5\md5.c">
-      <Filter>Source Files\md5</Filter>
-    </ClCompile>
-    <ClCompile Include="src\crc32\crc32.c">
-      <Filter>Source Files\crc32</Filter>
-    </ClCompile>
     <ClCompile Include="src\pool.c">
       <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\rhash\md5.c">
+      <Filter>Source Files\rhash</Filter>
+    </ClCompile>
+    <ClCompile Include="src\rhash\crc32.c">
+      <Filter>Source Files\rhash</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>

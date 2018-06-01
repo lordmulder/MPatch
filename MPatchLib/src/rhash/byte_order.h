@@ -14,8 +14,9 @@
 * or FITNESS FOR A PARTICULAR PURPOSE.  Use this program  at  your own risk!
 */
 
-#ifndef BYTE_ORDER_H
-#define BYTE_ORDER_H
+#ifndef _INC_RHASH_BYTEORDER_H
+#define _INC_RHASH_BYTEORDER_H
+
 #include <stdint.h>
 #include <stdlib.h>
 
@@ -25,10 +26,6 @@
 
 #ifdef __GLIBC__
 # include <endian.h>
-#endif
-
-#ifdef __cplusplus
-extern "C" {
 #endif
 
 /* if x86 compatible cpu */
@@ -179,8 +176,4 @@ static inline uint64_t bswap_64(uint64_t x) {
 #define ROTL64(qword, n) ((qword) << (n) ^ ((qword) >> (64 - (n))))
 #define ROTR64(qword, n) ((qword) >> (n) ^ ((qword) << (64 - (n))))
 
-#ifdef __cplusplus
-} /* extern "C" */
-#endif /* __cplusplus */
-
-#endif /* BYTE_ORDER_H */
+#endif /*_INC_RHASH_BYTEORDER_H*/

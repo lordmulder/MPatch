@@ -19,17 +19,17 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="src\crc32\crc32.c" />
     <ClCompile Include="src\libmpatch.c" />
-    <ClCompile Include="src\md5\md5.c" />
     <ClCompile Include="src\pool.c" />
+    <ClCompile Include="src\rhash\crc32.c" />
+    <ClCompile Include="src\rhash\md5.c" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="include\libmpatch.h" />
-    <ClInclude Include="src\crc32\byte_order.h" />
-    <ClInclude Include="src\crc32\crc32.h" />
-    <ClInclude Include="src\md5\md5.h" />
     <ClInclude Include="src\pool.h" />
+    <ClInclude Include="src\rhash\byte_order.h" />
+    <ClInclude Include="src\rhash\crc32.h" />
+    <ClInclude Include="src\rhash\md5.h" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <VCProjectVersion>15.0</VCProjectVersion>
