@@ -18,8 +18,8 @@
 /* OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.        */
 /* ---------------------------------------------------------------------------------------------- */
 
-#ifndef _INC_POOL_H
-#define _INC_POOL_H 
+#ifndef _INC_MPATCH_POOL_H
+#define _INC_MPATCH_POOL_H 
 
 #include <stdint.h>
 #include <stdbool.h>
@@ -48,4 +48,4 @@ void mpatch_pool_put_multiple(thread_pool_t *const pool, const pool_task_t *cons
 void mpatch_pool_await(thread_pool_t *const pool);
 bool mpatch_pool_destroy(thread_pool_t *const pool);
 
-#endif
+#endif /*_INC_MPATCH_POOL_H*/

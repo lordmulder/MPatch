@@ -18,26 +18,15 @@
 /* OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.        */
 /* ---------------------------------------------------------------------------------------------- */
 
-#ifndef _INC_UTILS_H
-#define _INC_UTILS_H
+#ifndef _INC_MPATCH_UTILS_H
+#define _INC_MPATCH_UTILS_H
 
 #include <stdint.h>
+#include <stdbool.h>
 
-/* ======================================================================= */
-/* Inline functions                                                        */
-/* ======================================================================= */
-
-static __forceinline uint_fast32_t max_uint32(const uint_fast32_t a, const uint_fast32_t b)
-{
-	return (a > b) ? a : b;
-}
+#define BOOLIFY(X) (!!(X))
 
 static __forceinline uint_fast32_t min_uint32(const uint_fast32_t a, const uint_fast32_t b)
-{
-	return (a < b) ? a : b;
-}
-
-static __forceinline uint64_t min_uint64(const uint64_t a, const uint64_t b)
 {
 	return (a < b) ? a : b;
 }
@@ -47,44 +36,28 @@ static __forceinline float min_flt(const float a, const float b)
 	return (a < b) ? a : b;
 }
 
-static __forceinline uint64_t diff_uint64(const uint64_t a, const uint64_t b)
+static __forceinline uint_fast32_t diff_uint32(const uint_fast32_t a, const uint_fast32_t b)
 {
 	return (a > b) ? (a - b) : (b - a);
 }
 
-static __forceinline uint32_t log10_uint32(uint32_t value)
+static inline void enc_uint32(uint8_t *const buffer, const uint32_t value)
 {
-	uint32_t ret = 1U;
-	while (value /= 10U)
+	static const size_t SHIFT[4] = { 24U, 16U, 8U, 0U };
+	for (size_t i = 0; i < 4U; ++i)
 	{
-		ret++;
+		buffer[i] = (uint8_t)(value >> SHIFT[i]);
 	}
-	return ret;
 }
 
-/* ======================================================================= */
-/* Type definitions                                                        */
-/* ======================================================================= */
-
-#define GAUSS_FILTER_SIZE 32U
-
-typedef struct
+static inline void dec_uint32(uint32_t *const value, const uint8_t *const buffer)
 {
-	double window[GAUSS_FILTER_SIZE];
-	size_t pos;
+	static const size_t SHIFT[4] = { 24U, 16U, 8U, 0U };
+	*value = 0U;
+	for (size_t i = 0; i < 4U; ++i)
+	{
+		*value |= (buffer[i] << SHIFT[i]);
+	}
 }
-gauss_t;
 
-/* ======================================================================= */
-/* Function declarations                                                   */
-/* ======================================================================= */
-
-const wchar_t *basename(const wchar_t *const path);
-
-const wchar_t *env_get_string(const wchar_t *const name);
-uint_fast32_t env_get_uint32(const wchar_t *const name, const uint_fast32_t max_value, const uint_fast32_t default_value);
-
-void gauss_init(gauss_t *const ctx);
-double gauss_update(gauss_t *const ctx, const double value);
-
-#endif /*_INC_UTILS_H*/
+#endif /*_INC_MPATCH_UTILS_H*/

@@ -23,13 +23,17 @@
     <ClCompile Include="src\pool.c" />
     <ClCompile Include="src\rhash\crc32.c" />
     <ClCompile Include="src\rhash\md5.c" />
+    <ClCompile Include="src\selftest.c" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="include\libmpatch.h" />
+    <ClInclude Include="src\bit_io.h" />
     <ClInclude Include="src\pool.h" />
     <ClInclude Include="src\rhash\byte_order.h" />
     <ClInclude Include="src\rhash\crc32.h" />
     <ClInclude Include="src\rhash\md5.h" />
+    <ClInclude Include="src\substring.h" />
+    <ClInclude Include="src\utils.h" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <VCProjectVersion>15.0</VCProjectVersion>

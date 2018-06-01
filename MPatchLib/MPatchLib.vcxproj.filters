@@ -36,6 +36,15 @@
     <ClInclude Include="src\rhash\byte_order.h">
       <Filter>Header Files\rhash</Filter>
     </ClInclude>
+    <ClInclude Include="src\utils.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\bit_io.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\substring.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\libmpatch.c">
@@ -49,6 +58,9 @@
     </ClCompile>
     <ClCompile Include="src\rhash\crc32.c">
       <Filter>Source Files\rhash</Filter>
+    </ClCompile>
+    <ClCompile Include="src\selftest.c">
+      <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>
