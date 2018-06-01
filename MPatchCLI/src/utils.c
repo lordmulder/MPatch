@@ -84,12 +84,12 @@ uint_fast32_t env_get_uint32(const wchar_t *const name, const uint_fast32_t max_
 		long long int temp;
 		if (swscanf_s(string, is_hex_string(string) ? L"%llx" : L"%llu", &temp) < 1)
 		{
-			_set_errno(EINVAL);
+			errno = EINVAL;
 			temp = 0U;
 		}
 		if ((temp < 0) || (temp >(long long int)max_value))
 		{
-			_set_errno(ERANGE);
+			errno = ERANGE;
 			temp = 0U;
 		}
 		free((void*)string);

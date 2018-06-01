@@ -79,12 +79,12 @@ gauss_t;
 /* Function declarations                                                   */
 /* ======================================================================= */
 
-const wchar_t *basename(const wchar_t *const path);
-
 const wchar_t *env_get_string(const wchar_t *const name);
 uint_fast32_t env_get_uint32(const wchar_t *const name, const uint_fast32_t max_value, const uint_fast32_t default_value);
 
 void gauss_init(gauss_t *const ctx);
 double gauss_update(gauss_t *const ctx, const double value);
+
+const wchar_t *basename(const wchar_t *const path);
 
 #endif /*_INC_UTILS_H*/

@@ -26,25 +26,21 @@
 
 typedef BOOL(WINAPI *GET_LOGICAL_PROCINFO)(PSYSTEM_LOGICAL_PROCESSOR_INFORMATION, PDWORD);
 
-static uint_fast32_t get_simple_processor_count(void)
+static uint_fast32_t count_set_bits(DWORD mask)
 {
-	uint_fast32_t processor_core_count = 0U;
-	DWORD_PTR maskProcess, maskSystem;
-	if (GetProcessAffinityMask(GetCurrentProcess(), &maskProcess, &maskSystem))
+	uint_fast32_t bit_count = 0U;
+	while (mask)
 	{
-		while (maskSystem)
+		if (mask & 1U)
 		{
-			if (maskSystem & 1U)
-			{
-				processor_core_count++;
-			}
-			maskSystem >>= 1U;
+			bit_count++;
 		}
+		mask >>= 1U;
 	}
-	return processor_core_count;
+	return bit_count;
 }
 
-static uint_fast32_t get_physical_processor_count(void)
+static uint_fast32_t detect_processor_count(const bool logical_codes)
 {
 	const GET_LOGICAL_PROCINFO get_logical_procinfo = (GET_LOGICAL_PROCINFO) GetProcAddress(GetModuleHandleW(L"kernel32"), "GetLogicalProcessorInformation");
 	if (!get_logical_procinfo)
@@ -75,7 +71,7 @@ static uint_fast32_t get_physical_processor_count(void)
 	{
 		if (buffer[i].Relationship == RelationProcessorCore)
 		{
-			processor_core_count++;
+			processor_core_count += logical_codes ? count_set_bits(buffer[i].ProcessorMask) : 1U;
 		}
 	}
 
@@ -83,12 +79,22 @@ static uint_fast32_t get_physical_processor_count(void)
 	return processor_core_count;
 }
 
-uint_fast32_t get_processor_count(void)
+static uint_fast32_t detect_processor_count_fallback(void)
 {
-	uint_fast32_t count = get_physical_processor_count();
+	DWORD_PTR maskProcess, maskSystem;
+	if (GetProcessAffinityMask(GetCurrentProcess(), &maskProcess, &maskSystem))
+	{
+		return count_set_bits(maskSystem);
+	}
+	return 0U;
+}
+
+uint_fast32_t get_processor_count(const bool logical_codes)
+{
+	uint_fast32_t count = detect_processor_count(logical_codes);
 	if (!count)
 	{
-		count = get_simple_processor_count();
+		count = detect_processor_count_fallback();
 	}
 	return count ? count : 1U;
 }

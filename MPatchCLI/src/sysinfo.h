@@ -19,10 +19,11 @@
 /* ---------------------------------------------------------------------------------------------- */
 
 #include <stdint.h>
+#include <stdbool.h>
 
 #ifndef _INC_SYSINFO_H
 #define _INC_SYSINFO_H 
 
-uint_fast32_t get_processor_count(void);
+uint_fast32_t get_processor_count(const bool logical_codes);
 
 #endif
