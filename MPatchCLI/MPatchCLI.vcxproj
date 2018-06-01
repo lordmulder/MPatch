@@ -43,6 +43,9 @@
     <ClInclude Include="src\sysinfo.h" />
     <ClInclude Include="src\utils.h" />
   </ItemGroup>
+  <ItemGroup>
+    <ResourceCompile Include="MPatchCLI.rc" />
+  </ItemGroup>
   <PropertyGroup Label="Globals">
     <VCProjectVersion>15.0</VCProjectVersion>
     <ProjectGuid>{9A222F77-9953-439C-9AF2-685275F3A147}</ProjectGuid>

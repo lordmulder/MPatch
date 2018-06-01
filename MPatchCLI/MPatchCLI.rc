@@ -1,0 +1,13 @@
+// Microsoft Visual C++ generated resource script.
+//
+#include "WinResrc.h" //"afxres.h"
+
+/*
+ * Resource ID's
+ */
+#define IDI_ICON1                       106
+
+/*
+ * Icon
+ */
+IDI_ICON1               ICON                    "res\\update.ico"
