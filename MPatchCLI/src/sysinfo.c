@@ -40,9 +40,15 @@ static uint_fast32_t count_set_bits(DWORD mask)
 	return bit_count;
 }
 
-static uint_fast32_t detect_processor_count(const bool logical_codes)
+static uint_fast32_t detect_processor_count_ex(const bool logical_cores)
 {
-	const GET_LOGICAL_PROCINFO get_logical_procinfo = (GET_LOGICAL_PROCINFO) GetProcAddress(GetModuleHandleW(L"kernel32"), "GetLogicalProcessorInformation");
+	const HMODULE kernel32 = GetModuleHandleW(L"kernel32");
+	if (!kernel32)
+	{
+		return 0U; /*unsupported*/
+	}
+
+	const GET_LOGICAL_PROCINFO get_logical_procinfo = (GET_LOGICAL_PROCINFO) GetProcAddress(kernel32, "GetLogicalProcessorInformation");
 	if (!get_logical_procinfo)
 	{
 		return 0U; /*unsupported*/
@@ -71,7 +77,15 @@ static uint_fast32_t detect_processor_count(const bool logical_codes)
 	{
 		if (buffer[i].Relationship == RelationProcessorCore)
 		{
-			processor_core_count += logical_codes ? count_set_bits(buffer[i].ProcessorMask) : 1U;
+			if (logical_cores)
+			{
+				const uint_fast32_t bit_count = count_set_bits(buffer[i].ProcessorMask);
+				processor_core_count += bit_count ? bit_count : 1U;
+			}
+			else
+			{
+				++processor_core_count;
+			}
 		}
 	}
 
@@ -79,7 +93,7 @@ static uint_fast32_t detect_processor_count(const bool logical_codes)
 	return processor_core_count;
 }
 
-static uint_fast32_t detect_processor_count_fallback(void)
+static uint_fast32_t detect_processor_count(void)
 {
 	DWORD_PTR maskProcess, maskSystem;
 	if (GetProcessAffinityMask(GetCurrentProcess(), &maskProcess, &maskSystem))
@@ -89,12 +103,12 @@ static uint_fast32_t detect_processor_count_fallback(void)
 	return 0U;
 }
 
-uint_fast32_t get_processor_count(const bool logical_codes)
+uint_fast32_t get_processor_count(const bool logical_cores)
 {
-	uint_fast32_t count = detect_processor_count(logical_codes);
+	uint_fast32_t count = detect_processor_count_ex(logical_cores);
 	if (!count)
 	{
-		count = detect_processor_count_fallback();
+		count = detect_processor_count();
 	}
 	return count ? count : 1U;
 }

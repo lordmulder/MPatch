@@ -24,6 +24,6 @@
 #ifndef _INC_SYSINFO_H
 #define _INC_SYSINFO_H 
 
-uint_fast32_t get_processor_count(const bool logical_codes);
+uint_fast32_t get_processor_count(const bool logical_cores);
 
 #endif
