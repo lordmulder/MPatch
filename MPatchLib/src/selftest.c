@@ -23,6 +23,7 @@
 
 #include <stdlib.h>
 #include <malloc.h>
+#include <string.h>
 
 #define TEST_FAIL(X) do \
 { \

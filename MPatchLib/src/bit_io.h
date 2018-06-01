@@ -22,6 +22,7 @@
 #define _INC_MPATCH_BITIO_H
 
 #include <stdint.h>
+#include <memory.h>
 
 #include "rhash/md5.h"
 #include "rhash/crc32.h"
