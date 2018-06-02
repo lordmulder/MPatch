@@ -26,7 +26,7 @@
 
 typedef BOOL(WINAPI *GET_LOGICAL_PROCINFO)(PSYSTEM_LOGICAL_PROCESSOR_INFORMATION, PDWORD);
 
-static uint_fast32_t count_set_bits(DWORD mask)
+static uint_fast32_t count_set_bits(DWORD_PTR mask)
 {
 	uint_fast32_t bit_count = 0U;
 	while (mask)
