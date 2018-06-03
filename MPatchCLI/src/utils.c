@@ -105,13 +105,16 @@ uint_fast32_t env_get_uint32(const wchar_t *const name, const uint_fast32_t max_
 /* Gaussian filter                                                         */
 /* ======================================================================= */
 
-#define GAUSS_BOUND_IDX(X) \
-	do { if ((X) >= GAUSS_FILTER_SIZE) { X = 0U; } } while(0)
+#define BOUND_VALUE(VAL, MAX) \
+	do { if ((VAL) >= (MAX)) { VAL = 0U; } } while(0)
+
+#define MEDIAN_OF3(A, B, C) \
+	(max(min((A),(B)), min(max((A),(B)),(C))))
 
 void gauss_init(gauss_t *const ctx)
 {
 	memset(ctx, 0, sizeof(gauss_t));
-	ctx->pos = SIZE_MAX;
+	ctx->pos[0] = ctx->pos[1] = SIZE_MAX;
 }
 
 double gauss_update(gauss_t *const ctx, const double value)
@@ -124,26 +127,38 @@ double gauss_update(gauss_t *const ctx, const double value)
 		0.058772, 0.062342, 0.065530, 0.068260, 0.070462, 0.072078, 0.073066, 0.073398
 	};
 
-	if (ctx->pos == SIZE_MAX)
+	if (ctx->pos[0U] == SIZE_MAX)
 	{
-		for (size_t i = 0; i < GAUSS_FILTER_SIZE; ++i)
+		for (size_t i = 0U; i < 3U; ++i)
 		{
-			ctx->window[i] = value;
+			ctx->median[i] = value;
 		}
-		ctx->pos = 0U;
+		ctx->pos[0U] = 0U;
 	}
 
-	ctx->window[ctx->pos++] = value;
-	GAUSS_BOUND_IDX(ctx->pos);
+	ctx->median[ctx->pos[0U]++] = value;
+	BOUND_VALUE(ctx->pos[0U], 3U);
+
+	const double median = MEDIAN_OF3(ctx->median[0U], ctx->median[1U], ctx->median[2U]);
+
+	if (ctx->pos[1U] == SIZE_MAX)
+	{
+		for (size_t i = 0U; i < GAUSS_FILTER_SIZE; ++i)
+		{
+			ctx->window[i] = median;
+		}
+		ctx->pos[1U] = 0U;
+	}
+
+	ctx->window[ctx->pos[1U]++] = median;
+	BOUND_VALUE(ctx->pos[1U], GAUSS_FILTER_SIZE);
 
 	double result = 0.0;
-	for (size_t i = 0, k = ctx->pos; i < GAUSS_FILTER_SIZE; ++i)
+	for (size_t i = 0, k = ctx->pos[1U]; i < GAUSS_FILTER_SIZE; ++i)
 	{
 		result += ctx->window[k++] * WEIGHTS[i];
-		GAUSS_BOUND_IDX(k);
+		BOUND_VALUE(k, GAUSS_FILTER_SIZE);
 	}
 
 	return result;
 }
-
-#undef GAUSS_BOUND_IDX

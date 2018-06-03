@@ -70,8 +70,9 @@ static __forceinline uint32_t log10_uint32(uint32_t value)
 
 typedef struct
 {
+	double median[3U];
 	double window[GAUSS_FILTER_SIZE];
-	size_t pos;
+	size_t pos[2U];
 }
 gauss_t;
 
