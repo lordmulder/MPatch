@@ -149,7 +149,7 @@ static inline float find_optimal_substring(substring_t *const substring, const u
 	memset(thread_param, 0, sizeof(thread_param));
 
 	//Threads enabled?
-	if ((thread_pool->thread_count < 2U) || (haystack_len <= 4096U))
+	if ((!thread_pool) || (!thread_pool->thread_count) || (haystack_len <= 16384U))
 	{
 		thread_param[0U].search_param = &search_param;
 		thread_param[0U].search_range.begin = 0U;
@@ -162,7 +162,7 @@ static inline float find_optimal_substring(substring_t *const substring, const u
 	//Compute step size
 	const uint_fast32_t step_size = (haystack_len / thread_pool->thread_count) + 1U;
 
-	//Start threads
+	//Set up task parameters
 	pool_task_t task_queue[MAX_THREAD_COUNT];
 	uint_fast32_t range_offset = 0U;
 	for (uint_fast32_t t = 0U; t < thread_pool->thread_count; ++t)
@@ -175,11 +175,8 @@ static inline float find_optimal_substring(substring_t *const substring, const u
 		task_queue[t].data = (uintptr_t)(&thread_param[t]);
 	}
 
-	//Enqueue all tasks
-	mpatch_pool_put_multiple(thread_pool, task_queue, thread_pool->thread_count);
-
-	//Await completion
-	mpatch_pool_await(thread_pool);
+	//Execute tasks
+	mpatch_pool_exec(thread_pool, task_queue, thread_pool->thread_count);
 
 	//Find the "optimal" result
 	uint_fast32_t thread_id = UINT_FAST32_MAX;
