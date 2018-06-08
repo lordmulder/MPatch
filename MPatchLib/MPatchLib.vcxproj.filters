@@ -19,6 +19,12 @@
     <Filter Include="Source Files\rhash">
       <UniqueIdentifier>{b5063236-7e8e-4666-9150-4c5e62d43d33}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Source Files\lz4">
+      <UniqueIdentifier>{3a4ddabe-1c85-47de-ae02-85fd1913560b}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\lz4">
+      <UniqueIdentifier>{d87d27f5-ff88-438b-acf3-09a3fc116ed2}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="include\libmpatch.h">
@@ -45,6 +51,9 @@
     <ClInclude Include="src\substring.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="src\lz4\lz4.h">
+      <Filter>Source Files\lz4</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\libmpatch.c">
@@ -61,6 +70,9 @@
     </ClCompile>
     <ClCompile Include="src\selftest.c">
       <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\lz4\lz4.c">
+      <Filter>Header Files\lz4</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>

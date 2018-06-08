@@ -28,6 +28,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\libmpatch.c" />
+    <ClCompile Include="src\lz4\lz4.c" />
     <ClCompile Include="src\pool.c" />
     <ClCompile Include="src\rhash\crc32.c" />
     <ClCompile Include="src\rhash\md5.c" />
@@ -36,6 +37,7 @@
   <ItemGroup>
     <ClInclude Include="include\libmpatch.h" />
     <ClInclude Include="src\bit_io.h" />
+    <ClInclude Include="src\lz4\lz4.h" />
     <ClInclude Include="src\pool.h" />
     <ClInclude Include="src\rhash\byte_order.h" />
     <ClInclude Include="src\rhash\crc32.h" />
