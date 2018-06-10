@@ -72,7 +72,7 @@ static uint_fast32_t detect_processor_count_ex(const bool logical_cores)
 	}
 
 	uint_fast32_t processor_core_count = 0U;
-	const DWORD info_count = return_length / sizeof(PSYSTEM_LOGICAL_PROCESSOR_INFORMATION);
+	const DWORD info_count = return_length / sizeof(SYSTEM_LOGICAL_PROCESSOR_INFORMATION);
 	for(DWORD i = 0U; i < info_count; ++i)
 	{
 		if (buffer[i].Relationship == RelationProcessorCore)
