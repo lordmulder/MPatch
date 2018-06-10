@@ -26,9 +26,6 @@
 #include "pool.h"
 #include <float.h>
 
-#define SUBSTR_SRC false
-#define SUBSTR_REF true
-
 #define SUBSTR_BWD false
 #define SUBSTR_FWD true
 
@@ -42,7 +39,6 @@ substring_t;
 
 typedef struct
 {
-	uint_fast32_t literal_len;
 	uint_fast32_t prev_offset;
 	const uint8_t *needle;
 	uint_fast32_t needle_len;
@@ -69,12 +65,16 @@ typedef struct
 }
 search_thread_t;
 
-static __forceinline float compute_substring_cost(const uint_fast32_t literal_len, const uint_fast32_t substr_len, const uint_fast32_t substr_off_diff)
+static const uint_fast32_t SUBSTRING_THRESHOLD = 2U;
+
+static __forceinline float substring_cost(const uint_fast32_t substr_len, const uint_fast32_t substr_off_diff)
 {
-	const uint_fast32_t total_bits = (substr_len > 1U)
-		? (exp_golomb_size(literal_len) + (8U * literal_len) + exp_golomb_size(substr_len - 1U) + exp_golomb_size(substr_off_diff) + (substr_off_diff ? 2U : 1U))
-		: (exp_golomb_size(literal_len) + (8U * literal_len) + exp_golomb_size(0U));
-	return ((float)total_bits) / ((float)(literal_len + substr_len));
+	if (substr_len > SUBSTRING_THRESHOLD)
+	{
+		const uint_fast32_t total_bits = exp_golomb_size(substr_len - SUBSTRING_THRESHOLD) + exp_golomb_size(substr_off_diff) + (substr_off_diff ? 1U : 0U);
+		return (float)total_bits / substr_len;
+	}
+	return FLT_MAX;
 }
 
 static inline uintptr_t find_optimal_substring_thread(const uintptr_t data)
@@ -110,12 +110,12 @@ static inline uintptr_t find_optimal_substring_thread(const uintptr_t data)
 				break; /*end of matching sequence*/
 			}
 		}
-		if (matching_len > 1U)
+		if (matching_len > SUBSTRING_THRESHOLD)
 		{
 			const uint_fast32_t offset_diff = diff_uint32(offset_curr, param->search_param->prev_offset);
 			if ((matching_len > param->result.substring.length) || (offset_diff < param->result.substring.offset_diff))
 			{
-				const float current_cost = compute_substring_cost(param->search_param->literal_len, matching_len, offset_diff);
+				const float current_cost = substring_cost(matching_len, offset_diff);
 				if (current_cost < param->result.cost)
 				{
 					param->result.substring.length = matching_len;
@@ -142,7 +142,7 @@ static inline uintptr_t find_optimal_substring_thread(const uintptr_t data)
 static inline float find_optimal_substring(substring_t *const substring, const uint_fast32_t literal_len, const uint_fast32_t prev_offset, thread_pool_t *const thread_pool, const uint8_t *const needle, const uint_fast32_t needle_len, const uint8_t *const haystack, const uint_fast32_t haystack_len)
 {
 	//Common search parameters
-	const search_param_t search_param = { literal_len, prev_offset, needle, needle_len, haystack, haystack_len };
+	const search_param_t search_param = { prev_offset, needle, needle_len, haystack, haystack_len };
 
 	//Set up per-thread parameters
 	search_thread_t thread_param[MAX_THREAD_COUNT];
