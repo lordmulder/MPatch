@@ -213,8 +213,8 @@
       <OptimizeReferences>true</OptimizeReferences>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <LinkTimeCodeGeneration>UseLinkTimeCodeGeneration</LinkTimeCodeGeneration>
-      <AdditionalDependencies>pthreadVC2.$(PlatformToolset).sse2.lib;liblz4_static.$(PlatformToolset).sse2.lib;%(AdditionalDependencies)</AdditionalDependencies>
-      <AdditionalLibraryDirectories>$(SolutionDir)..\Prerequisites\PthreadsW32\lib\$(PlatformName)\static;$(SolutionDir)..\Prerequisites\LZ4\lib\$(PlatformName)\$(Configuration)</AdditionalLibraryDirectories>
+      <AdditionalDependencies>pthreadVC2.$(PlatformToolset).sse2.lib;zlibstat.$(PlatformToolset).sse2.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalLibraryDirectories>$(SolutionDir)..\Prerequisites\PthreadsW32\lib\$(PlatformName)\static;$(SolutionDir)..\Prerequisites\Zlib\lib\$(PlatformName)\$(Configuration)</AdditionalLibraryDirectories>
       <ShowProgress>LinkVerboseLib</ShowProgress>
     </Link>
   </ItemDefinitionGroup>
@@ -273,8 +273,8 @@
       <SubSystem>Console</SubSystem>
       <GenerateDebugInformation>false</GenerateDebugInformation>
       <LinkTimeCodeGeneration>UseLinkTimeCodeGeneration</LinkTimeCodeGeneration>
-      <AdditionalDependencies>pthreadVC2.$(PlatformToolset).lib;liblz4_static.$(PlatformToolset).lib;%(AdditionalDependencies)</AdditionalDependencies>
-      <AdditionalLibraryDirectories>$(SolutionDir)..\Prerequisites\PthreadsW32\lib\$(PlatformName)\static;$(SolutionDir)..\Prerequisites\LZ4\lib\$(PlatformName)\$(Configuration)</AdditionalLibraryDirectories>
+      <AdditionalDependencies>pthreadVC2.$(PlatformToolset).lib;zlibstat.$(PlatformToolset).lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalLibraryDirectories>$(SolutionDir)..\Prerequisites\PthreadsW32\lib\$(PlatformName)\static;$(SolutionDir)..\Prerequisites\Zlib\lib\$(PlatformName)\$(Configuration)</AdditionalLibraryDirectories>
       <ShowProgress>LinkVerboseLib</ShowProgress>
       <GenerateMapFile>true</GenerateMapFile>
       <OptimizeReferences>false</OptimizeReferences>
