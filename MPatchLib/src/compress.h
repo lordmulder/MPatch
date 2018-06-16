@@ -28,7 +28,8 @@ typedef struct _mpatch_cctx_t mpatch_cctx_t;
 
 //Compress
 bool mpatch_compress_enc_init(mpatch_cctx_t **const cctx, const uint_fast32_t max_chunk_size);
-bool mpatch_compress_enc_test(mpatch_cctx_t *const cctx, const uint8_t *const message_in, const uint_fast32_t message_size, uint_fast32_t *const compressed_size);
+bool mpatch_compress_enc_load(mpatch_cctx_t *const cctx, const uint8_t *const dict_in, const uint_fast32_t dict_size);
+uint_fast32_t mpatch_compress_enc_test(mpatch_cctx_t *const cctx, const uint8_t *const message_in, const uint_fast32_t message_size);
 const uint8_t *mpatch_compress_enc_next(mpatch_cctx_t *const cctx, const uint8_t *const message_in, const uint_fast32_t message_size, uint_fast32_t *const compressed_size);
 bool mpatch_compress_enc_free(mpatch_cctx_t **const cctx);
 

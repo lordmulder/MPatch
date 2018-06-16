@@ -19,6 +19,7 @@
 /* ---------------------------------------------------------------------------------------------- */
 
 #include "compress.h"
+#include "utils.h"
 
 #include <stdlib.h>
 #include <malloc.h>
@@ -59,7 +60,7 @@ bool mpatch_compress_enc_init(mpatch_cctx_t **const cctx, const uint_fast32_t ma
 	}
 
 	//Create deflate stream
-	if (deflateInit2(&(*cctx)->stream, 9, Z_DEFLATED, -15, 9, Z_DEFAULT_STRATEGY) != Z_OK)
+	if (deflateInit2(&(*cctx)->stream, 9, Z_DEFLATED, -15, 8, Z_DEFAULT_STRATEGY) != Z_OK)
 	{
 		free(*cctx);
 		*cctx = NULL;
@@ -79,21 +80,36 @@ bool mpatch_compress_enc_init(mpatch_cctx_t **const cctx, const uint_fast32_t ma
 	return true;
 }
 
-bool mpatch_compress_enc_test(mpatch_cctx_t *const cctx, const uint8_t *const message_in, const uint_fast32_t message_size, uint_fast32_t *const compressed_size)
+bool mpatch_compress_enc_load(mpatch_cctx_t *const cctx, const uint8_t *const dict_in, const uint_fast32_t dict_size)
+{
+	//Check parameters
+	if ((!cctx) || (!dict_in) || (dict_size < 1U))
+	{
+		return false;
+	}
+
+	//Pre-load dictionary
+	if (deflateSetDictionary(&cctx->stream, dict_in, min_uint32(32768U, dict_size)) != Z_OK)
+	{
+		return UINT_FAST32_MAX;
+	}
+
+	return true;
+}
+
+uint_fast32_t mpatch_compress_enc_test(mpatch_cctx_t *const cctx, const uint8_t *const message_in, const uint_fast32_t message_size)
 {
 	//Check parameters
 	if ((!cctx) || (!cctx->buffer) || (!message_in) || (message_size > cctx->max_chunk_size))
 	{
-		*compressed_size = 0U;
-		return false;
+		return UINT_FAST32_MAX;
 	}
 
 	//Copy the deflate stream
 	z_stream temp;
 	if (deflateCopy(&temp, &cctx->stream) != Z_OK)
 	{
-		*compressed_size = 0U;
-		return false;
+		return UINT_FAST32_MAX;
 	}
 
 	//Setup temporary deflate stream
@@ -106,8 +122,7 @@ bool mpatch_compress_enc_test(mpatch_cctx_t *const cctx, const uint8_t *const me
 	if (deflate(&temp, Z_SYNC_FLUSH) != Z_OK)
 	{
 		deflateEnd(&temp);
-		*compressed_size = 0U;
-		return false;
+		return UINT_FAST32_MAX;
 	}
 
 	//Sanity check
@@ -117,17 +132,16 @@ bool mpatch_compress_enc_test(mpatch_cctx_t *const cctx, const uint8_t *const me
 	}
 
 	//Compute compressed size
-	*compressed_size = cctx->buffer_size - temp.avail_out;
+	const uint_fast32_t compressed_size = cctx->buffer_size - temp.avail_out;
 
 	//Free temporary stream
 	const int error = deflateEnd(&temp);
 	if ((error != Z_OK) && (error != Z_DATA_ERROR))
 	{
-		*compressed_size = 0U;
-		return false;
+		return UINT_FAST32_MAX;;
 	}
 
-	return true;
+	return compressed_size;
 }
 
 const uint8_t *mpatch_compress_enc_next(mpatch_cctx_t *const cctx, const uint8_t *const message_in, const uint_fast32_t message_size, uint_fast32_t *const compressed_size)
