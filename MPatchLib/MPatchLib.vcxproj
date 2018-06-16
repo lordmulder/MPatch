@@ -38,6 +38,7 @@
     <ClInclude Include="include\libmpatch.h" />
     <ClInclude Include="src\bit_io.h" />
     <ClInclude Include="src\compress.h" />
+    <ClInclude Include="src\encode.h" />
     <ClInclude Include="src\pool.h" />
     <ClInclude Include="src\rhash\byte_order.h" />
     <ClInclude Include="src\rhash\crc32.h" />
