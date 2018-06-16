@@ -60,7 +60,7 @@ bool mpatch_compress_enc_init(mpatch_cctx_t **const cctx, const uint_fast32_t ma
 	}
 
 	//Create deflate stream
-	if (deflateInit2(&(*cctx)->stream, 9, Z_DEFLATED, -15, 8, Z_DEFAULT_STRATEGY) != Z_OK)
+	if (deflateInit2(&(*cctx)->stream, 9, Z_DEFLATED, -15, 9, Z_DEFAULT_STRATEGY) != Z_OK)
 	{
 		free(*cctx);
 		*cctx = NULL;

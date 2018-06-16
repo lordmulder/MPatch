@@ -36,6 +36,13 @@ typedef struct
 	io_state_t output_state;
 	mpatch_cctx_t *cctx;
 	uint_fast32_t prev_offset;
+	struct
+	{
+		uint_fast32_t literal_bytes;
+		uint_fast32_t substring_bytes;
+		uint_fast32_t saved_bytes;
+	}
+	stats;
 }
 encd_state_t;
 
@@ -67,6 +74,7 @@ static bool _write_chunk(const uint8_t *const input_ptr, const mpatch_writer_t *
 	if (optimal_literal_len > 0U)
 	{
 		uint_fast32_t compressed_size = optimal_literal_len;
+		coder_state->stats.literal_bytes += optimal_literal_len;
 		if (optimal_literal_len > COMPRESS_THRESHOLD)
 		{
 			if ((compressed_size = mpatch_compress_enc_test(coder_state->cctx, input_ptr, optimal_literal_len)) == UINT_FAST32_MAX)
@@ -77,6 +85,7 @@ static bool _write_chunk(const uint8_t *const input_ptr, const mpatch_writer_t *
 		if (compressed_size < optimal_literal_len)
 		{
 			const uint8_t *const compressed_data = mpatch_compress_enc_next(coder_state->cctx, input_ptr, optimal_literal_len, &compressed_size);
+			coder_state->stats.saved_bytes += (optimal_literal_len - compressed_size);
 			if (!(compressed_data && exp_golomb_write(compressed_size, output, &coder_state->output_state) && write_bit(true, output, &coder_state->output_state) && write_bytes(compressed_data, compressed_size, output, &coder_state->output_state)))
 			{
 				return false;
@@ -101,6 +110,7 @@ static bool _write_chunk(const uint8_t *const input_ptr, const mpatch_writer_t *
 	//Write substring
 	if (optimal_substr->length > SUBSTRING_THRESHOLD)
 	{
+		coder_state->stats.substring_bytes += optimal_substr->length;
 		if (!(exp_golomb_write(optimal_substr->length - SUBSTRING_THRESHOLD, output, &coder_state->output_state) && exp_golomb_write(optimal_substr->offset_diff, output, &coder_state->output_state)))
 		{
 			return false;
@@ -183,6 +193,10 @@ static uint_fast32_t encode_chunk(const mpatch_rd_buffer_t *const input_buffer, 
 	//Write detailed info to log
 	if (logger->logging_func)
 	{
+		if (!input_pos)
+		{
+			logger->logging_func("[CHUNKS]\n", logger->user_data);
+		}
 		if (optimal_substr.length > SUBSTRING_THRESHOLD)
 		{
 			logger->logging_func("%016lu, %6.4f, %016lu, %016lu, %s, %016lu\n", logger->user_data, input_pos, cost_optimal, optimal_literal_len,
