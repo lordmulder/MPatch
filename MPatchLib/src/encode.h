@@ -190,6 +190,26 @@ static uint_fast32_t encode_chunk(const mpatch_rd_buffer_t *const input_buffer, 
 		}
 	}
 
+	//Try to refine the decision using small steps
+	if ((step_size > 1U) && (optimal_literal_len >= step_size))
+	{
+		for (uint_fast32_t refine_step = step_size / 2U; refine_step > 0U; refine_step /= 2U)
+		{
+			const uint_fast32_t literal_len = optimal_literal_len - refine_step;
+			substring_t substr_data;
+			if (find_optimal_substring(&substr_data, literal_len, coder_state->prev_offset, thread_pool, input_buffer->buffer + input_pos + literal_len, remaining - literal_len, reference_buffer->buffer, reference_buffer->capacity))
+			{
+				const float substr_cost = _chunk_cost(input_buffer->buffer + input_pos, coder_state, literal_len, &substr_data);
+				if (substr_cost < cost_optimal)
+				{
+					optimal_literal_len = literal_len;
+					memcpy(&optimal_substr, &substr_data, sizeof(substring_t));
+					cost_optimal = substr_cost;
+				}
+			}
+		}
+	}
+
 	//Write detailed info to log
 	if (logger->logging_func)
 	{
