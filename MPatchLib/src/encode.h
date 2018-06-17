@@ -157,7 +157,7 @@ static void _update_encd_state(encd_state_t *const coder_state, const substring_
 	}
 }
 
-static uint_fast32_t encode_chunk(const mpatch_rd_buffer_t *const input_buffer, const uint_fast32_t input_pos, const mpatch_rd_buffer_t *const reference_buffer, const mpatch_writer_t *const output, encd_state_t *const coder_state, thread_pool_t *const thread_pool, const uint_fast32_t step_size, const mpatch_logger_t *const logger)
+static uint_fast32_t encode_chunk(const mpatch_rd_buffer_t *const input_buffer, const uint_fast32_t input_pos, const mpatch_rd_buffer_t *const reference_buffer, const mpatch_writer_t *const output, encd_state_t *const coder_state, thread_pool_t *const thread_pool, const uint_fast32_t max_step_size, const mpatch_logger_t *const logger)
 {
 	const uint_fast32_t remaining = input_buffer->capacity - input_pos;
 	const uint_fast32_t literal_limit = min_uint32(LITERAL_LIMIT, remaining);
@@ -166,11 +166,12 @@ static uint_fast32_t encode_chunk(const mpatch_rd_buffer_t *const input_buffer, 
 	substring_t optimal_substr = { 0U, 0U, false };
 	uint_fast32_t optimal_literal_len;
 
-	//Initialize bit cost computation
+	//Initialize adaptive step size and bit cost computation
+	uint_fast32_t current_step_size = 0U;
 	float cost_optimal = _chunk_cost(input_buffer->buffer + input_pos, coder_state, optimal_literal_len = literal_limit, &optimal_substr);
 
 	//Find the "optimal" encoding of the next chunk
-	for (uint_fast32_t literal_len = 0U; literal_len <= literal_limit; literal_len += step_size)
+	for (uint_fast32_t literal_len = 0U; literal_len <= literal_limit; literal_len += current_step_size)
 	{
 		substring_t substr_data;
 		if (find_optimal_substring(&substr_data, literal_len, coder_state->prev_offset, thread_pool, input_buffer->buffer + input_pos + literal_len, remaining - literal_len, reference_buffer->buffer, reference_buffer->capacity))
@@ -186,27 +187,36 @@ static uint_fast32_t encode_chunk(const mpatch_rd_buffer_t *const input_buffer, 
 		}
 		if (optimal_substr.length)
 		{
-			break; /*stop optimization process*/
+			break; /*stop optimization process here*/
+		}
+		if (current_step_size < max_step_size)
+		{
+			current_step_size = current_step_size ? (2U * current_step_size) : 1U;
 		}
 	}
 
 	//Try to refine the decision using small steps
-	if ((step_size > 1U) && (optimal_literal_len >= step_size))
+	while (current_step_size /= 2U)
 	{
-		for (uint_fast32_t refine_step = step_size / 2U; refine_step > 0U; refine_step /= 2U)
+		for (;;)
 		{
-			const uint_fast32_t literal_len = optimal_literal_len - refine_step;
-			substring_t substr_data;
-			if (find_optimal_substring(&substr_data, literal_len, coder_state->prev_offset, thread_pool, input_buffer->buffer + input_pos + literal_len, remaining - literal_len, reference_buffer->buffer, reference_buffer->capacity))
+			if (optimal_literal_len > current_step_size)
 			{
-				const float substr_cost = _chunk_cost(input_buffer->buffer + input_pos, coder_state, literal_len, &substr_data);
-				if (substr_cost < cost_optimal)
+				const uint_fast32_t literal_len = optimal_literal_len - current_step_size;
+				substring_t substr_data;
+				if (find_optimal_substring(&substr_data, literal_len, coder_state->prev_offset, thread_pool, input_buffer->buffer + input_pos + literal_len, remaining - literal_len, reference_buffer->buffer, reference_buffer->capacity))
 				{
-					optimal_literal_len = literal_len;
-					memcpy(&optimal_substr, &substr_data, sizeof(substring_t));
-					cost_optimal = substr_cost;
+					const float substr_cost = _chunk_cost(input_buffer->buffer + input_pos, coder_state, literal_len, &substr_data);
+					if (substr_cost < cost_optimal)
+					{
+						optimal_literal_len = literal_len;
+						memcpy(&optimal_substr, &substr_data, sizeof(substring_t));
+						cost_optimal = substr_cost;
+						continue; /*skip "stop" check this one time*/
+					}
 				}
 			}
+			break;
 		}
 	}
 
