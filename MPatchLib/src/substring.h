@@ -81,6 +81,15 @@ static inline uintptr_t find_optimal_substring_thread(const uintptr_t data)
 {
 	search_thread_t *const param = (search_thread_t*)data;
 
+	//Get search parameters
+	const uint8_t *const haystack_ptr = param->search_param->haystack;
+	const uint_fast32_t  haystack_len = param->search_param->haystack_len;
+	const uint8_t *const needle_ptr   = param->search_param->needle;
+	const uint_fast32_t  needle_len   = param->search_param->needle_len;
+	const uint_fast32_t  range_begin  = param->search_range.begin;
+	const uint_fast32_t  range_end    = param->search_range.end;
+	const uint_fast32_t  prev_offset  = param->search_param->prev_offset;
+
 	//Initialize result
 	param->result.substring.length = 0U;
 	param->result.substring.offset_diff = UINT_FAST32_MAX;
@@ -88,47 +97,50 @@ static inline uintptr_t find_optimal_substring_thread(const uintptr_t data)
 	param->result.cost = FLT_MAX;
 
 	//Sanity checking
-	if ((param->search_param->haystack_len < 2U) || (param->search_param->needle_len < 2U))
+	if ((haystack_len < 2U) || (needle_len < 2U))
 	{
 		return 0U;
 	}
 
 	//Setup search parameters
-	const uint8_t *haystack_off = param->search_param->haystack + param->search_range.begin;
-	uint_fast32_t remaining = param->search_range.end - param->search_range.begin;
+	const uint8_t *haystack_off = haystack_ptr + range_begin;
+	uint_fast32_t remaining = range_end - range_begin;
 
 	//Find the longest substring in haystack
-	while (haystack_off = memchr(haystack_off, param->search_param->needle[0U], remaining))
+	while (haystack_off = memchr(haystack_off, *needle_ptr, remaining))
 	{
-		const uint_fast32_t offset_curr = (uint_fast32_t)(haystack_off - param->search_param->haystack);
-		const uint_fast32_t match_limit = min_uint32(param->search_param->needle_len, param->search_param->haystack_len - offset_curr);
-		uint_fast32_t matching_len;
-		for (matching_len = 1U; matching_len < match_limit; matching_len++)
+		const uint_fast32_t offset_curr = (uint_fast32_t)(haystack_off - haystack_ptr);
+		const uint_fast32_t match_limit = min_uint32(needle_len, haystack_len - offset_curr);
+		if ((match_limit > SUBSTRING_THRESHOLD) && (!memcmp(haystack_off, needle_ptr, SUBSTRING_THRESHOLD)))
 		{
-			if (haystack_off[matching_len] != param->search_param->needle[matching_len])
+			uint_fast32_t matching_len;
+			for (matching_len = SUBSTRING_THRESHOLD; matching_len < match_limit; matching_len++)
 			{
-				break; /*end of matching sequence*/
-			}
-		}
-		if (matching_len > SUBSTRING_THRESHOLD)
-		{
-			const uint_fast32_t offset_diff = diff_uint32(offset_curr, param->search_param->prev_offset);
-			if ((matching_len > param->result.substring.length) || (offset_diff < param->result.substring.offset_diff))
-			{
-				const float current_cost = substring_cost(matching_len, offset_diff);
-				if (current_cost < param->result.cost)
+				if (haystack_off[matching_len] != needle_ptr[matching_len])
 				{
-					param->result.substring.length = matching_len;
-					param->result.substring.offset_diff = offset_diff;
-					param->result.substring.offset_sign = (offset_curr >= param->search_param->prev_offset) ? SUBSTR_FWD : SUBSTR_BWD;
-					param->result.cost = current_cost;
+					break; /*end of matching sequence*/
+				}
+			}
+			if (matching_len > SUBSTRING_THRESHOLD)
+			{
+				const uint_fast32_t offset_diff = diff_uint32(offset_curr, prev_offset);
+				if ((matching_len > param->result.substring.length) || (offset_diff < param->result.substring.offset_diff))
+				{
+					const float current_cost = substring_cost(matching_len, offset_diff);
+					if (current_cost < param->result.cost)
+					{
+						param->result.substring.length = matching_len;
+						param->result.substring.offset_diff = offset_diff;
+						param->result.substring.offset_sign = (offset_curr >= prev_offset) ? SUBSTR_FWD : SUBSTR_BWD;
+						param->result.cost = current_cost;
+					}
 				}
 			}
 		}
-		if (offset_curr < param->search_range.end)
+		if (offset_curr < range_end)
 		{
 			++haystack_off;
-			remaining = param->search_range.end - offset_curr;
+			remaining = range_end - offset_curr;
 		}
 		else
 		{
