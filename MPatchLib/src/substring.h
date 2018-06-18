@@ -65,7 +65,7 @@ typedef struct
 }
 search_thread_t;
 
-static const uint_fast32_t SUBSTRING_THRESHOLD = 3U;
+#define SUBSTRING_THRESHOLD 3U
 
 static __forceinline float substring_cost(const uint_fast32_t substr_len, const uint_fast32_t substr_off_diff)
 {
@@ -111,29 +111,26 @@ static inline uintptr_t find_optimal_substring_thread(const uintptr_t data)
 	{
 		const uint_fast32_t offset_curr = (uint_fast32_t)(haystack_off - haystack_ptr);
 		const uint_fast32_t match_limit = min_uint32(needle_len, haystack_len - offset_curr);
-		if ((match_limit > SUBSTRING_THRESHOLD) && (!memcmp(haystack_off, needle_ptr, SUBSTRING_THRESHOLD)))
+		if ((match_limit > SUBSTRING_THRESHOLD) && (!memcmp(haystack_off, needle_ptr, SUBSTRING_THRESHOLD + 1U)))
 		{
 			uint_fast32_t matching_len;
-			for (matching_len = SUBSTRING_THRESHOLD; matching_len < match_limit; matching_len++)
+			for (matching_len = SUBSTRING_THRESHOLD + 1U; matching_len < match_limit; matching_len++)
 			{
 				if (haystack_off[matching_len] != needle_ptr[matching_len])
 				{
 					break; /*end of matching sequence*/
 				}
 			}
-			if (matching_len > SUBSTRING_THRESHOLD)
+			const uint_fast32_t offset_diff = diff_uint32(offset_curr, prev_offset);
+			if ((matching_len > param->result.substring.length) || (offset_diff < param->result.substring.offset_diff))
 			{
-				const uint_fast32_t offset_diff = diff_uint32(offset_curr, prev_offset);
-				if ((matching_len > param->result.substring.length) || (offset_diff < param->result.substring.offset_diff))
+				const float current_cost = substring_cost(matching_len, offset_diff);
+				if (current_cost < param->result.cost)
 				{
-					const float current_cost = substring_cost(matching_len, offset_diff);
-					if (current_cost < param->result.cost)
-					{
-						param->result.substring.length = matching_len;
-						param->result.substring.offset_diff = offset_diff;
-						param->result.substring.offset_sign = (offset_curr >= prev_offset) ? SUBSTR_FWD : SUBSTR_BWD;
-						param->result.cost = current_cost;
-					}
+					param->result.substring.length = matching_len;
+					param->result.substring.offset_diff = offset_diff;
+					param->result.substring.offset_sign = (offset_curr >= prev_offset) ? SUBSTR_FWD : SUBSTR_BWD;
+					param->result.cost = current_cost;
 				}
 			}
 		}

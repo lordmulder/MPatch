@@ -41,6 +41,11 @@ static __forceinline uint_fast32_t diff_uint32(const uint_fast32_t a, const uint
 	return (a > b) ? (a - b) : (b - a);
 }
 
+static __forceinline uint_fast32_t inc_bound_uint32(uint_fast32_t *const val, const uint_fast32_t max)
+{
+	return (*val < max) ? ++(*val) : max;
+}
+
 static inline void enc_uint32(uint8_t *const buffer, const uint32_t value)
 {
 	static const size_t SHIFT[4] = { 24U, 16U, 8U, 0U };
