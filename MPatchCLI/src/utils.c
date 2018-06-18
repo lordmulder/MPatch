@@ -102,24 +102,30 @@ uint_fast32_t env_get_uint32(const wchar_t *const name, const uint_fast32_t max_
 }
 
 /* ======================================================================= */
+/* Sorting                                                                 */
+/* ======================================================================= */
+
+static void insert_sort(double *const dst, const double *const src, const size_t n)
+{
+	dst[0] = src[0];
+	for (size_t i = 1; i < n; ++i)
+	{
+		size_t j = i;
+		while ((j > 0) && (src[i] < dst[j - 1U]))
+		{
+			dst[j] = dst[j - 1U];
+			--j;
+		}
+		dst[j] = src[i];
+	}
+}
+
+/* ======================================================================= */
 /* Gaussian filter                                                         */
 /* ======================================================================= */
 
 #define BOUND_VALUE(VAL, MAX) \
 	do { if ((VAL) >= (MAX)) { VAL = 0U; } } while(0)
-
-static int cmpfnc_dbl(const void *const a, const void *const b)
-{
-	if ((*(const double*)a) < (*(const double*)b))
-	{
-		return -1;
-	}
-	if ((*(const double*)a) > (*(const double*)b))
-	{
-		return 1;
-	}
-	return 0;
-}
 
 void gauss_init(gauss_t *const ctx)
 {
@@ -151,19 +157,18 @@ double gauss_update(gauss_t *const ctx, const double value)
 	ctx->median[0U][ctx->pos[0U]++] = value;
 	BOUND_VALUE(ctx->pos[0U], MEDIAN_FILTER_SIZE);
 
-	memcpy(ctx->median[1U], ctx->median[0U], sizeof(double) * MEDIAN_FILTER_SIZE);
-	qsort(ctx->median[1U], MEDIAN_FILTER_SIZE, sizeof(double), cmpfnc_dbl);
+	insert_sort(ctx->median[1U], ctx->median[0U], MEDIAN_FILTER_SIZE);
 
 	if (ctx->pos[1U] == SIZE_MAX)
 	{
 		for (size_t i = 0U; i < GAUSS_FILTER_SIZE; ++i)
 		{
-			ctx->window[i] = ctx->median[1U][2U];
+			ctx->window[i] = ctx->median[1U][MEDIAN_FILTER_SIZE / 2U];
 		}
 		ctx->pos[1U] = 0U;
 	}
 
-	ctx->window[ctx->pos[1U]++] = ctx->median[1U][2U];
+	ctx->window[ctx->pos[1U]++] = ctx->median[1U][MEDIAN_FILTER_SIZE / 2U];
 	BOUND_VALUE(ctx->pos[1U], GAUSS_FILTER_SIZE);
 
 	double result = 0.0;
