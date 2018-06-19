@@ -102,22 +102,24 @@ uint_fast32_t env_get_uint32(const wchar_t *const name, const uint_fast32_t max_
 }
 
 /* ======================================================================= */
-/* Sorting                                                                 */
+/* Median                                                                  */
 /* ======================================================================= */
 
-static void insert_sort(double *const dst, const double *const src, const size_t n)
+static double get_median(const double *const src)
 {
-	dst[0] = src[0];
-	for (size_t i = 1; i < n; ++i)
+	double tmp[MEDIAN_FILTER_SIZE];
+	tmp[0U] = src[0U];
+	for (size_t i = 1; i < MEDIAN_FILTER_SIZE; ++i)
 	{
 		size_t j = i;
-		while ((j > 0) && (src[i] < dst[j - 1U]))
+		while ((j > 0U) && (src[i] < tmp[j - 1U]))
 		{
-			dst[j] = dst[j - 1U];
+			tmp[j] = tmp[j - 1U];
 			--j;
 		}
-		dst[j] = src[i];
+		tmp[j] = src[i];
 	}
+	return tmp[MEDIAN_FILTER_SIZE / 2U];
 }
 
 /* ======================================================================= */
@@ -133,8 +135,6 @@ void gauss_init(gauss_t *const ctx)
 	ctx->pos[0] = ctx->pos[1] = SIZE_MAX;
 }
 
-#include <stdio.h>
-
 double gauss_update(gauss_t *const ctx, const double value)
 {
 	static const double WEIGHTS[GAUSS_FILTER_SIZE] =
@@ -145,30 +145,24 @@ double gauss_update(gauss_t *const ctx, const double value)
 		0.058772, 0.062342, 0.065530, 0.068260, 0.070462, 0.072078, 0.073066, 0.073398
 	};
 
-	if (ctx->pos[0U] == SIZE_MAX)
+	if ((ctx->pos[0U] == SIZE_MAX) && (ctx->pos[1U] == SIZE_MAX))
 	{
 		for (size_t i = 0U; i < MEDIAN_FILTER_SIZE; ++i)
 		{
-			ctx->median[0U][i] = value;
+			ctx->median[i] = value;
 		}
-		ctx->pos[0U] = 0U;
-	}
-
-	ctx->median[0U][ctx->pos[0U]++] = value;
-	BOUND_VALUE(ctx->pos[0U], MEDIAN_FILTER_SIZE);
-
-	insert_sort(ctx->median[1U], ctx->median[0U], MEDIAN_FILTER_SIZE);
-
-	if (ctx->pos[1U] == SIZE_MAX)
-	{
 		for (size_t i = 0U; i < GAUSS_FILTER_SIZE; ++i)
 		{
-			ctx->window[i] = ctx->median[1U][MEDIAN_FILTER_SIZE / 2U];
+			ctx->window[i] = value;
 		}
-		ctx->pos[1U] = 0U;
+		ctx->pos[0U] = ctx->pos[1U] = 0U;
+		return value;
 	}
 
-	ctx->window[ctx->pos[1U]++] = ctx->median[1U][MEDIAN_FILTER_SIZE / 2U];
+	ctx->median[ctx->pos[0U]++] = value;
+	BOUND_VALUE(ctx->pos[0U], MEDIAN_FILTER_SIZE);
+
+	ctx->window[ctx->pos[1U]++] = get_median(ctx->median);
 	BOUND_VALUE(ctx->pos[1U], GAUSS_FILTER_SIZE);
 
 	double result = 0.0;
