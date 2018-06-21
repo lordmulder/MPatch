@@ -196,6 +196,7 @@ static uint_fast32_t encode_chunk(const mpatch_rd_buffer_t *const input_buffer, 
 	}
 
 	//Try to refine the decision using "backward" steps
+#if MPATCH_ENABLE_REFINE_STEP
 	while (step_size > 2U)
 	{
 		--step_size;
@@ -217,6 +218,7 @@ static uint_fast32_t encode_chunk(const mpatch_rd_buffer_t *const input_buffer, 
 			break; /*no improvement, stop!*/
 		}
 	}
+#endif /*MPATCH_ENABLE_REFINE_STEP*/
 
 	//Write detailed info to log
 	if (logger->logging_func)
