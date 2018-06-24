@@ -26,6 +26,8 @@
 #include "pool.h"
 #include <float.h>
 
+#include <stdlib.h>
+
 #define SUBSTR_BWD false
 #define SUBSTR_FWD true
 
@@ -58,8 +60,8 @@ typedef struct
 	search_range;
 	struct
 	{
-		substring_t substring;
-		float cost;
+		substring_t data;
+		uint64_t score;
 	}
 	result;
 }
@@ -67,17 +69,14 @@ search_thread_t;
 
 #define SUBSTRING_THRESHOLD 3U
 
-static __forceinline float substring_cost(const uint_fast32_t substr_len, const uint_fast32_t substr_off_diff)
+static __forceinline uint64_t substring_score(const uint_fast32_t length, const uint_fast32_t offset_diff)
 {
-	if (substr_len > SUBSTRING_THRESHOLD)
-	{
-		const uint_fast32_t total_bits = exp_golomb_size(substr_len - SUBSTRING_THRESHOLD) + exp_golomb_size(substr_off_diff) + (substr_off_diff ? 1U : 0U);
-		return (float)total_bits / (substr_len * 8U);
-	}
-	return FLT_MAX;
+	const uint64_t offset_bits = exp_golomb_size(offset_diff);
+	const uint64_t data_bits = (uint64_t)length << 3U;
+	return (data_bits > offset_bits) ? (data_bits - offset_bits) : 0U;
 }
 
-static inline uintptr_t find_optimal_substring_thread(const uintptr_t data)
+static inline uintptr_t _find_optimal_substring(const uintptr_t data)
 {
 	search_thread_t *const param = (search_thread_t*)data;
 
@@ -91,10 +90,8 @@ static inline uintptr_t find_optimal_substring_thread(const uintptr_t data)
 	const uint_fast32_t  prev_offset  = param->search_param->prev_offset;
 
 	//Initialize result
-	param->result.substring.length = 0U;
-	param->result.substring.offset_diff = UINT_FAST32_MAX;
-	param->result.substring.offset_sign = SUBSTR_FWD;
-	param->result.cost = FLT_MAX;
+	memset(&param->result.data, 0, sizeof(substring_t));
+	param->result.score = 0U;
 
 	//Sanity checking
 	if ((haystack_len < 2U) || (needle_len < 2U))
@@ -122,16 +119,13 @@ static inline uintptr_t find_optimal_substring_thread(const uintptr_t data)
 				}
 			}
 			const uint_fast32_t offset_diff = diff_uint32(offset_curr, prev_offset);
-			if ((matching_len > param->result.substring.length) || (offset_diff < param->result.substring.offset_diff))
+			const uint64_t score = substring_score(matching_len, offset_diff);
+			if (score > param->result.score)
 			{
-				const float current_cost = substring_cost(matching_len, offset_diff);
-				if (current_cost < param->result.cost)
-				{
-					param->result.substring.length = matching_len;
-					param->result.substring.offset_diff = offset_diff;
-					param->result.substring.offset_sign = (offset_curr >= prev_offset) ? SUBSTR_FWD : SUBSTR_BWD;
-					param->result.cost = current_cost;
-				}
+				param->result.data.length = matching_len;
+				param->result.data.offset_diff = offset_diff;
+				param->result.data.offset_sign = (offset_curr >= prev_offset) ? SUBSTR_FWD : SUBSTR_BWD;
+				param->result.score = score;
 			}
 		}
 		if (offset_curr < range_end)
@@ -148,10 +142,13 @@ static inline uintptr_t find_optimal_substring_thread(const uintptr_t data)
 	return 1U;
 }
 
-static inline bool find_optimal_substring(substring_t *const substring, const uint_fast32_t literal_len, const uint_fast32_t prev_offset, thread_pool_t *const thread_pool, const uint8_t *const needle, const uint_fast32_t needle_len, const uint8_t *const haystack, const uint_fast32_t haystack_len)
+static inline uint64_t find_optimal_substring(substring_t *const substring, const uint_fast32_t prev_offset, thread_pool_t *const thread_pool, const uint8_t *const needle, const uint_fast32_t needle_len, const uint8_t *const haystack, const uint_fast32_t haystack_len)
 {
 	//Common search parameters
 	const search_param_t search_param = { prev_offset, needle, needle_len, haystack, haystack_len };
+
+	//Initialize result
+	memset(substring, 0, sizeof(substring_t));
 
 	//Set up per-thread parameters
 	search_thread_t thread_param[MAX_THREAD_COUNT];
@@ -163,9 +160,13 @@ static inline bool find_optimal_substring(substring_t *const substring, const ui
 		thread_param[0U].search_param = &search_param;
 		thread_param[0U].search_range.begin = 0U;
 		thread_param[0U].search_range.end = haystack_len;
-		find_optimal_substring_thread((uintptr_t)&thread_param[0U]);
-		memcpy(substring, &thread_param[0U].result.substring, sizeof(substring_t));
-		return thread_param[0U].result.cost;
+		_find_optimal_substring((uintptr_t)&thread_param[0U]);
+		if (thread_param[0U].result.score)
+		{
+			memcpy(substring, &thread_param[0U].result.data, sizeof(substring_t));
+			return thread_param[0U].result.score;
+		}
+		return 0U;
 	}
 
 	//Compute step size
@@ -180,34 +181,24 @@ static inline bool find_optimal_substring(substring_t *const substring, const ui
 		thread_param[t].search_range.begin = range_offset;
 		thread_param[t].search_range.end = min_uint32(haystack_len, range_offset + step_size);
 		range_offset = thread_param[t].search_range.end;
-		task_queue[t].func = find_optimal_substring_thread;
+		task_queue[t].func = _find_optimal_substring;
 		task_queue[t].data = (uintptr_t)(&thread_param[t]);
 	}
 
 	//Execute tasks
 	mpatch_pool_exec(thread_pool, task_queue, thread_pool->thread_count);
 
-	//Find the "optimal" result
-	uint_fast32_t thread_id = UINT_FAST32_MAX;
-	float lowest_cost = FLT_MAX;
+	//Find the "optimal" thread result
+	uint64_t best_score = 0U;
 	for (uint_fast32_t t = 0U; t < thread_pool->thread_count; ++t)
 	{
-		if (thread_param[t].result.cost < lowest_cost)
+		if (thread_param[t].result.score > best_score)
 		{
-			thread_id = t;
-			lowest_cost = thread_param[t].result.cost;
+			memcpy(substring, &thread_param[t].result.data, sizeof(substring_t));
+			best_score = thread_param[t].result.score;
 		}
 	}
-
-	//Return "optimal" result
-	if (thread_id != UINT_FAST32_MAX)
-	{
-		memcpy(substring, &thread_param[thread_id].result.substring, sizeof(substring_t));
-		return true;
-	}
-
-	memset(substring, 0U, sizeof(substring_t));
-	return false;
+	return best_score;
 }
 
 #endif /*_INC_MPATCH_SUBSTRING_H*/
