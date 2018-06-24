@@ -163,8 +163,8 @@
     <Link>
       <SubSystem>Console</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalDependencies>pthreadVC2d.$(PlatformToolset).lib;liblz4_static.$(PlatformToolset).lib;%(AdditionalDependencies)</AdditionalDependencies>
-      <AdditionalLibraryDirectories>$(SolutionDir)..\Prerequisites\PthreadsW32\lib\$(PlatformName)\static;$(SolutionDir)..\Prerequisites\LZ4\lib\$(PlatformName)\Debug</AdditionalLibraryDirectories>
+      <AdditionalDependencies>pthreadVC2d.$(PlatformToolset).lib;zlibstat.$(PlatformToolset).lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalLibraryDirectories>$(SolutionDir)..\Prerequisites\PthreadsW32\lib\$(PlatformName)\static;$(SolutionDir)..\Prerequisites\Zlib\lib\$(PlatformName)\$(Configuration)</AdditionalLibraryDirectories>
       <ShowProgress>LinkVerboseLib</ShowProgress>
     </Link>
   </ItemDefinitionGroup>
@@ -182,8 +182,8 @@
     <Link>
       <SubSystem>Console</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalDependencies>pthreadVC2d.$(PlatformToolset).lib;liblz4_static.$(PlatformToolset).lib;%(AdditionalDependencies)</AdditionalDependencies>
-      <AdditionalLibraryDirectories>$(SolutionDir)..\Prerequisites\PthreadsW32\lib\$(PlatformName)\static;$(SolutionDir)..\Prerequisites\LZ4\lib\$(PlatformName)\Debug</AdditionalLibraryDirectories>
+      <AdditionalDependencies>pthreadVC2d.$(PlatformToolset).lib;zlibstat.$(PlatformToolset).lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalLibraryDirectories>$(SolutionDir)..\Prerequisites\PthreadsW32\lib\$(PlatformName)\static;$(SolutionDir)..\Prerequisites\Zlib\lib\$(PlatformName)\$(Configuration)</AdditionalLibraryDirectories>
       <ShowProgress>LinkVerboseLib</ShowProgress>
     </Link>
   </ItemDefinitionGroup>
