@@ -166,6 +166,7 @@
       <AdditionalDependencies>pthreadVC2d.$(PlatformToolset).lib;zlibstat.$(PlatformToolset).lib;%(AdditionalDependencies)</AdditionalDependencies>
       <AdditionalLibraryDirectories>$(SolutionDir)..\Prerequisites\PthreadsW32\lib\$(PlatformName)\static;$(SolutionDir)..\Prerequisites\Zlib\lib\$(PlatformName)\$(Configuration)</AdditionalLibraryDirectories>
       <ShowProgress>LinkVerboseLib</ShowProgress>
+      <GenerateMapFile>true</GenerateMapFile>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
@@ -185,6 +186,7 @@
       <AdditionalDependencies>pthreadVC2d.$(PlatformToolset).lib;zlibstat.$(PlatformToolset).lib;%(AdditionalDependencies)</AdditionalDependencies>
       <AdditionalLibraryDirectories>$(SolutionDir)..\Prerequisites\PthreadsW32\lib\$(PlatformName)\static;$(SolutionDir)..\Prerequisites\Zlib\lib\$(PlatformName)\$(Configuration)</AdditionalLibraryDirectories>
       <ShowProgress>LinkVerboseLib</ShowProgress>
+      <GenerateMapFile>true</GenerateMapFile>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
@@ -276,9 +278,9 @@
       <AdditionalDependencies>pthreadVC2.$(PlatformToolset).lib;zlibstat.$(PlatformToolset).lib;%(AdditionalDependencies)</AdditionalDependencies>
       <AdditionalLibraryDirectories>$(SolutionDir)..\Prerequisites\PthreadsW32\lib\$(PlatformName)\static;$(SolutionDir)..\Prerequisites\Zlib\lib\$(PlatformName)\$(Configuration)</AdditionalLibraryDirectories>
       <ShowProgress>LinkVerboseLib</ShowProgress>
-      <GenerateMapFile>true</GenerateMapFile>
-      <OptimizeReferences>false</OptimizeReferences>
-      <EnableCOMDATFolding>false</EnableCOMDATFolding>
+      <GenerateMapFile>false</GenerateMapFile>
+      <OptimizeReferences>true</OptimizeReferences>
+      <EnableCOMDATFolding>true</EnableCOMDATFolding>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release_DLL|x64'">

@@ -67,7 +67,7 @@ static __forceinline uint32_t log10_uint32(uint32_t value)
 /* ======================================================================= */
 
 #define GAUSS_FILTER_SIZE 32U
-#define MEDIAN_FILTER_SIZE 5U
+#define MEDIAN_FILTER_SIZE 7U
 
 typedef struct
 {

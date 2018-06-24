@@ -171,6 +171,6 @@ double gauss_update(gauss_t *const ctx, const double value)
 		result += ctx->window[k++] * WEIGHTS[i];
 		BOUND_VALUE(k, GAUSS_FILTER_SIZE);
 	}
-
+	
 	return result;
 }
