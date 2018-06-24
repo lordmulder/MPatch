@@ -200,3 +200,12 @@ bool mpatch_compress_enc_free(mpatch_cctx_t **const cctx)
 	//Check result
 	return ((error == Z_OK) || (error == Z_DATA_ERROR));
 }
+
+/* ======================================================================= */
+/* Compress functions                                                      */
+/* ======================================================================= */
+
+const char *mpatch_compress_libver(void)
+{
+	return zlibVersion();
+}

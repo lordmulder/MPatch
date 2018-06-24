@@ -43,6 +43,7 @@
     <ClInclude Include="src\rhash\byte_order.h" />
     <ClInclude Include="src\rhash\crc32.h" />
     <ClInclude Include="src\rhash\md5.h" />
+    <ClInclude Include="src\rhash\version.h" />
     <ClInclude Include="src\substring.h" />
     <ClInclude Include="src\utils.h" />
   </ItemGroup>
