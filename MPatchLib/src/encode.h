@@ -152,17 +152,17 @@ static uint_fast32_t encode_chunk(const mpatch_rd_buffer_t *const input_buffer, 
 	
 	//Keep the "optimal" settings
 	substring_t optimal_substr = { 0U, 0U, false };
+	uint_fast32_t optimal_literal_idx = UINT_FAST32_MAX;
 	uint64_t optimal_score = 0U;
-	uint_fast32_t optimal_literal_len = min_uint32(remaining, MAX_LITERAL_LEN);
 
 	//Find the "optimal" encoding of the next chunk
-	for (uint_fast32_t literal_len_idx = 0U; (literal_len_idx < LITERAL_LEN_COUNT) && (remaining > LITERAL_LEN[literal_len_idx]); ++literal_len_idx)
+	for (uint_fast32_t literal_len_idx = 0U; (literal_len_idx < LITERAL_LEN_COUNT) && (LITERAL_LEN[literal_len_idx] <= remaining); ++literal_len_idx)
 	{
 		substring_t substr_data;
 		const uint64_t score = find_optimal_substring(&substr_data, coder_state->prev_offset, thread_pool, input_buffer->buffer + input_pos + LITERAL_LEN[literal_len_idx], remaining - LITERAL_LEN[literal_len_idx], reference_buffer->buffer, reference_buffer->capacity);
 		if (score > optimal_score)
 		{
-			optimal_literal_len = LITERAL_LEN[literal_len_idx];
+			optimal_literal_idx = literal_len_idx;
 			memcpy(&optimal_substr, &substr_data, sizeof(substring_t));
 			optimal_score = score;
 			continue; /*skip "stop" check this one time*/
@@ -173,14 +173,17 @@ static uint_fast32_t encode_chunk(const mpatch_rd_buffer_t *const input_buffer, 
 		}
 	}
 
-	//Refine result
-	if (optimal_literal_len > 3U)
+	//Refine the "optimal" encoding
+	uint_fast32_t optimal_literal_len = min_uint32(remaining, MAX_LITERAL_LEN);
+	if (optimal_literal_idx != UINT_FAST32_MAX)
 	{
-		for (uint32_t refine_step = MAX_LITERAL_LEN; refine_step; refine_step /= 2U)
+		optimal_literal_len = LITERAL_LEN[optimal_literal_idx];
+		if (optimal_literal_idx > 3U)
 		{
-			if (refine_step > optimal_literal_len)
+			const uint_fast32_t refine_init = LITERAL_LEN[optimal_literal_idx] - LITERAL_LEN[optimal_literal_idx - 1U];
+			for (uint32_t refine_step = div2ceil_uint32(refine_init); refine_step; refine_step = div2ceil_uint32(refine_step))
 			{
-				const uint32_t literal_len = optimal_literal_len - 1U;
+				const uint32_t literal_len = optimal_literal_len - refine_step;
 				substring_t substr_data;
 				const uint64_t score = find_optimal_substring(&substr_data, coder_state->prev_offset, thread_pool, input_buffer->buffer + input_pos + literal_len, remaining - literal_len, reference_buffer->buffer, reference_buffer->capacity);
 				if (score > optimal_score)

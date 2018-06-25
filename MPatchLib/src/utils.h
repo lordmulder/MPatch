@@ -46,6 +46,11 @@ static __forceinline uint_fast32_t mean_uint32(const uint_fast32_t a, const uint
 	return (a / 2U) + (b / 2U) + (a & b & 1U);
 }
 
+static __forceinline uint_fast32_t div2ceil_uint32(const uint_fast32_t val)
+{
+	return (val > 1U) ? (1U + ((val - 1U) >> 1U)) : 0U;
+}
+
 static __forceinline uint_fast32_t inc_bound_uint32(uint_fast32_t *const val, const uint_fast32_t max)
 {
 	return (*val < max) ? ++(*val) : max;
